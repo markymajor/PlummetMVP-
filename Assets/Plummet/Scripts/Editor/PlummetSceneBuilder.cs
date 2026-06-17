@@ -144,7 +144,7 @@ namespace PlummetEditor
 
             PlayerController controller = player.AddComponent<PlayerController>();
             Set(controller, "visualLeanDegrees", 6f);
-            Set(controller, "fallingFrameRate", 10f);
+            Set(controller, "fallingFrameRate", 12f);
             SetSpriteArray(controller, "fallingFrames", fallingFrames.Length > 0 ? fallingFrames : new[] { playerSprite });
             return controller;
         }
@@ -463,7 +463,11 @@ namespace PlummetEditor
                 LoadGameSprite("mark-falling-flail-01.png"),
                 LoadGameSprite("mark-falling-flail-02.png"),
                 LoadGameSprite("mark-falling-flail-03.png"),
-                LoadGameSprite("mark-falling-flail-04.png")
+                LoadGameSprite("mark-falling-flail-04.png"),
+                LoadGameSprite("mark-falling-flail-05.png"),
+                LoadGameSprite("mark-falling-flail-06.png"),
+                LoadGameSprite("mark-falling-flail-07.png"),
+                LoadGameSprite("mark-falling-flail-08.png")
             };
 
             int validCount = 0;

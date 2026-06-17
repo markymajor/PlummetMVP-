@@ -26,7 +26,7 @@ The builder imports PNGs as sprites, creates the camera, player, walls, scrollin
 ## Editor Testing
 
 - Press Play.
-- Click/tap the start screen or press Space to begin.
+- Click/tap the start screen or press Space to open the instruction flow, then tap through to begin.
 - Use left/right arrow keys or A/D to move the player.
 - Mouse drag/click also acts as the touch fallback.
 - Colliding with a wall or spawned obstacle triggers game over.
@@ -44,7 +44,9 @@ On device, tilt left/right to steer. Touch input remains available as a fallback
 
 ## MVP Notes
 
-- `mark.png` is the player.
+- `mark.png` is the standing start-screen player.
+- `mark-falling-flail-01.png` through `mark-falling-flail-08.png` are the gameplay falling animation frames.
+- The falling animation is a simple flipbook driven by `PlayerController.cs`.
 - `Background.png` scrolls upward to simulate falling.
 - Obstacles and details are pooled and recycled.
 - Score increases with distance fallen.

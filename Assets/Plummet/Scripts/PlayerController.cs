@@ -21,6 +21,7 @@ namespace Plummet
         private SpriteRenderer spriteRenderer;
         private Sprite defaultSprite;
         private float lastInput;
+        private float fallingFrameTimer;
         private int currentFallingFrame = -1;
 
         private void Awake()
@@ -45,6 +46,7 @@ namespace Plummet
             position.x = Mathf.Clamp(position.x, -horizontalLimit, horizontalLimit);
             transform.position = position;
 
+            fallingFrameTimer += Time.deltaTime;
             AnimateFallingFrame();
             transform.rotation = Quaternion.Euler(0f, 0f, -lastInput * visualLeanDegrees);
         }
@@ -52,6 +54,7 @@ namespace Plummet
         public void ResetPlayer()
         {
             lastInput = 0f;
+            fallingFrameTimer = 0f;
             currentFallingFrame = -1;
             transform.position = startPosition;
             transform.rotation = Quaternion.identity;
@@ -68,7 +71,7 @@ namespace Plummet
                 return;
             }
 
-            int frameIndex = Mathf.FloorToInt(Time.time * fallingFrameRate) % fallingFrames.Length;
+            int frameIndex = Mathf.FloorToInt(fallingFrameTimer * fallingFrameRate) % fallingFrames.Length;
             if (frameIndex == currentFallingFrame || fallingFrames[frameIndex] == null)
             {
                 return;

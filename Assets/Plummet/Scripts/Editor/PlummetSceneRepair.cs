@@ -232,7 +232,7 @@ namespace PlummetEditor
 
             SetFloat(player, "horizontalLimit", 3.25f);
             SetFloat(player, "visualLeanDegrees", 6f);
-            SetFloat(player, "fallingFrameRate", 10f);
+            SetFloat(player, "fallingFrameRate", 12f);
             SetSpriteArray(player, "fallingFrames", fallingFrames.Length > 0 ? fallingFrames : new[] { fallingSprite });
         }
 
@@ -243,7 +243,11 @@ namespace PlummetEditor
                 LoadGameSprite("mark-falling-flail-01.png"),
                 LoadGameSprite("mark-falling-flail-02.png"),
                 LoadGameSprite("mark-falling-flail-03.png"),
-                LoadGameSprite("mark-falling-flail-04.png")
+                LoadGameSprite("mark-falling-flail-04.png"),
+                LoadGameSprite("mark-falling-flail-05.png"),
+                LoadGameSprite("mark-falling-flail-06.png"),
+                LoadGameSprite("mark-falling-flail-07.png"),
+                LoadGameSprite("mark-falling-flail-08.png")
             };
 
             int validCount = 0;
