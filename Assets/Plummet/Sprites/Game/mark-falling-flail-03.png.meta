@@ -3,7 +3,7 @@ guid: ed5f676daf82f445a8dae90999aaf38d
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 6780074230390344717
+      213: 8840539696538801291
     second: mark-falling-flail-03_0
   externalObjects: {}
   serializedVersion: 13
@@ -116,20 +116,20 @@ TextureImporter:
       name: mark-falling-flail-03_0
       rect:
         serializedVersion: 2
-        x: 2
-        y: 2
-        width: 178
-        height: 111
+        x: 0
+        y: 0
+        width: 256
+        height: 256
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: d0c42351799a71e50800000000000000
-      internalID: 6780074230390344717
+      spriteID: 915424b51c323cc50800000000000000
+      internalID: 8840539696538801291
       vertices: []
       indices: 
       edges: []
@@ -148,7 +148,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      mark-falling-flail-03_0: 6780074230390344717
+      mark-falling-flail-03_0: 8840539696538801291
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

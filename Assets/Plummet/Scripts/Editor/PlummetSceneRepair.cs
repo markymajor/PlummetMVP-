@@ -190,13 +190,38 @@ namespace PlummetEditor
                 }
 
                 importer.textureType = TextureImporterType.Sprite;
-                importer.spriteImportMode = SpriteImportMode.Single;
+                if (Path.GetFileName(path) == "mark-falling-flail-sheet.png")
+                {
+                    importer.spriteImportMode = SpriteImportMode.Multiple;
+                    importer.spritesheet = BuildFallingSheetMeta();
+                }
+                else
+                {
+                    importer.spriteImportMode = SpriteImportMode.Single;
+                }
                 importer.spritePixelsPerUnit = 100f;
                 importer.mipmapEnabled = false;
                 importer.filterMode = FilterMode.Point;
                 importer.alphaIsTransparency = true;
                 importer.SaveAndReimport();
             }
+        }
+
+        private static SpriteMetaData[] BuildFallingSheetMeta()
+        {
+            SpriteMetaData[] sprites = new SpriteMetaData[8];
+            for (int i = 0; i < sprites.Length; i++)
+            {
+                sprites[i] = new SpriteMetaData
+                {
+                    name = $"mark-falling-flail-sheet_{i + 1:00}",
+                    rect = new Rect(i * 256f, 0f, 256f, 256f),
+                    alignment = (int)SpriteAlignment.Center,
+                    pivot = new Vector2(0.5f, 0.5f)
+                };
+            }
+
+            return sprites;
         }
 
         private static void ConfigurePlayer(PlayerController player)

@@ -45,7 +45,8 @@ On device, tilt left/right to steer. Touch input remains available as a fallback
 ## MVP Notes
 
 - `mark.png` is the standing start-screen player.
-- `mark-falling-flail-01.png` through `mark-falling-flail-08.png` are the gameplay falling animation frames.
+- `mark-falling-flail-sheet.png` is the clean 8-frame horizontal sprite sheet: 2048x256, with 256x256 transparent frames.
+- `mark-falling-flail-01.png` through `mark-falling-flail-08.png` are the matching gameplay falling animation frame exports.
 - The falling animation is a simple flipbook driven by `PlayerController.cs`.
 - `Background.png` scrolls upward to simulate falling.
 - Obstacles and details are pooled and recycled.
