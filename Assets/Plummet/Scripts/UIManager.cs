@@ -24,6 +24,7 @@ namespace Plummet
 
         private void Awake()
         {
+            EnsurePanelsUsePortraitFrame();
             WireButton(playButton, OnPlayPressed);
             WireButton(distanceNextButton, OnDistanceNextPressed);
             WireButton(speedNextButton, OnSpeedNextPressed);
@@ -36,6 +37,7 @@ namespace Plummet
 
         public void ShowStart()
         {
+            EnsurePanelsUsePortraitFrame();
             startPanel.SetActive(true);
             SetInstructionPanels(false, false);
             hudPanel.SetActive(false);
@@ -60,6 +62,7 @@ namespace Plummet
 
         public void ShowInstructionDistance()
         {
+            EnsurePanelsUsePortraitFrame();
             startPanel.SetActive(false);
             SetInstructionPanels(true, false);
             hudPanel.SetActive(false);
@@ -68,6 +71,7 @@ namespace Plummet
 
         public void ShowInstructionSpeed()
         {
+            EnsurePanelsUsePortraitFrame();
             startPanel.SetActive(false);
             SetInstructionPanels(false, true);
             hudPanel.SetActive(false);
@@ -76,6 +80,7 @@ namespace Plummet
 
         public void ShowHud()
         {
+            EnsurePanelsUsePortraitFrame();
             startPanel.SetActive(false);
             SetInstructionPanels(false, false);
             hudPanel.SetActive(true);
@@ -84,6 +89,7 @@ namespace Plummet
 
         public void ShowGameOver(int score, int highScore)
         {
+            EnsurePanelsUsePortraitFrame();
             startPanel.SetActive(false);
             SetInstructionPanels(false, false);
             hudPanel.SetActive(false);
@@ -159,6 +165,55 @@ namespace Plummet
             {
                 instructionSpeedPanel.SetActive(speedVisible);
             }
+        }
+
+        private void EnsurePanelsUsePortraitFrame()
+        {
+            PortraitScreenFrame screenFrame = FindFirstObjectByType<PortraitScreenFrame>();
+            if (screenFrame == null)
+            {
+                return;
+            }
+
+            RectTransform frameRect = screenFrame.GetComponent<RectTransform>();
+            if (frameRect == null)
+            {
+                return;
+            }
+
+            PlacePanelInFrame(startPanel, frameRect);
+            PlacePanelInFrame(instructionDistancePanel, frameRect);
+            PlacePanelInFrame(instructionSpeedPanel, frameRect);
+            PlacePanelInFrame(hudPanel, frameRect);
+            PlacePanelInFrame(gameOverPanel, frameRect);
+            screenFrame.ApplyFrame();
+        }
+
+        private static void PlacePanelInFrame(GameObject panel, RectTransform frame)
+        {
+            if (panel == null)
+            {
+                return;
+            }
+
+            RectTransform rect = panel.GetComponent<RectTransform>();
+            if (rect == null)
+            {
+                return;
+            }
+
+            if (rect.parent != frame)
+            {
+                rect.SetParent(frame, false);
+            }
+
+            rect.anchorMin = Vector2.zero;
+            rect.anchorMax = Vector2.one;
+            rect.pivot = new Vector2(0.5f, 0.5f);
+            rect.anchoredPosition = Vector2.zero;
+            rect.sizeDelta = Vector2.zero;
+            rect.offsetMin = Vector2.zero;
+            rect.offsetMax = Vector2.zero;
         }
     }
 }
