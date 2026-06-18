@@ -309,8 +309,9 @@ namespace PlummetEditor
 #endif
 
             Font font = Resources.GetBuiltinResource<Font>("Arial.ttf");
+            Transform uiRoot = CreatePortraitUiRoot(canvasObject.transform).transform;
 
-            GameObject startPanel = CreatePanel("Start Panel", canvasObject.transform);
+            GameObject startPanel = CreatePanel("Start Panel", uiRoot);
             AddImage(startPanel.transform, "Menu Background", LoadGameSprite("main-menu-background_2014-12-19_adjusted.png"), Stretch(), false);
             AddImage(startPanel.transform, "Sky Cloud 1", LoadGameSprite("Cloud1.png"), Anchor(new Vector2(0.18f, 0.88f), new Vector2(420f, 86f)));
             AddImage(startPanel.transform, "Sky Cloud 2", LoadGameSprite("Cloud2.png"), Anchor(new Vector2(0.76f, 0.84f), new Vector2(330f, 74f)));
@@ -326,23 +327,23 @@ namespace PlummetEditor
             AddText(startPanel.transform, "Best Value", $"Best {PlayerPrefs.GetInt("PlummetHighScore", 0):N0}", font, Anchor(new Vector2(0.5f, 0.09f), new Vector2(500f, 60f)), 30, TextAnchor.MiddleCenter).color = new Color(1f, 1f, 1f, 0.82f);
             Button playButton = AddTextButton(startPanel.transform, "Play Button", string.Empty, font, Stretch());
 
-            GameObject instructionDistancePanel = CreatePanel("Instruction Distance Panel", canvasObject.transform);
+            GameObject instructionDistancePanel = CreatePanel("Instruction Distance Panel", uiRoot);
             AddImage(instructionDistancePanel.transform, "Instruction Distance Art", LoadUiSprite("instruction-distance.png"), Stretch(), false);
             Button distanceNextButton = AddTextButton(instructionDistancePanel.transform, "Distance Next Button", string.Empty, font, Stretch());
             Button distanceBackButton = AddTextButton(instructionDistancePanel.transform, "Distance Back Button", string.Empty, font, Anchor(new Vector2(0.12f, 0.965f), new Vector2(240f, 105f)));
 
-            GameObject instructionSpeedPanel = CreatePanel("Instruction Speed Panel", canvasObject.transform);
+            GameObject instructionSpeedPanel = CreatePanel("Instruction Speed Panel", uiRoot);
             AddImage(instructionSpeedPanel.transform, "Instruction Speed Art", LoadUiSprite("instruction-speed.png"), Stretch(), false);
             Button speedNextButton = AddTextButton(instructionSpeedPanel.transform, "Speed Next Button", string.Empty, font, Stretch());
             Button speedBackButton = AddTextButton(instructionSpeedPanel.transform, "Speed Back Button", string.Empty, font, Anchor(new Vector2(0.12f, 0.965f), new Vector2(240f, 105f)));
 
-            GameObject hudPanel = CreatePanel("HUD Panel", canvasObject.transform);
+            GameObject hudPanel = CreatePanel("HUD Panel", uiRoot);
             Text scoreText = AddText(hudPanel.transform, "Score Text", "0", font, Anchor(new Vector2(0.5f, 0.935f), new Vector2(560f, 105f)), 68, TextAnchor.MiddleCenter);
             scoreText.color = new Color(1f, 0.47f, 0.18f);
             ApplyScoreStyle(scoreText);
             Text highScoreText = AddText(hudPanel.transform, "Best Text", string.Empty, font, Anchor(new Vector2(0.5f, 0.91f), new Vector2(420f, 60f)), 28, TextAnchor.MiddleCenter);
 
-            GameObject gameOverPanel = CreatePanel("Game Over Panel", canvasObject.transform);
+            GameObject gameOverPanel = CreatePanel("Game Over Panel", uiRoot);
             AddDimmer(gameOverPanel.transform);
             AddImage(gameOverPanel.transform, "Game Over", LoadUiSprite("gameover.png"), Anchor(new Vector2(0.5f, 0.67f), new Vector2(760f, 190f)));
             Text finalScoreText = AddText(gameOverPanel.transform, "Final Score Text", "Score 0\nBest 0", font, Anchor(new Vector2(0.5f, 0.52f), new Vector2(560f, 150f)), 40, TextAnchor.MiddleCenter);
@@ -374,6 +375,27 @@ namespace PlummetEditor
             gameOverPanel.SetActive(false);
 
             return uiManager;
+        }
+
+        private static GameObject CreatePortraitUiRoot(Transform parent)
+        {
+            GameObject matte = new GameObject("Portrait Letterbox Matte", typeof(RectTransform), typeof(Image));
+            matte.transform.SetParent(parent, false);
+            ApplyRect(matte.GetComponent<RectTransform>(), Stretch());
+
+            Image matteImage = matte.GetComponent<Image>();
+            matteImage.color = Color.black;
+            matteImage.raycastTarget = false;
+
+            GameObject root = new GameObject("Portrait Phone Frame", typeof(RectTransform), typeof(AspectRatioFitter));
+            root.transform.SetParent(parent, false);
+            ApplyRect(root.GetComponent<RectTransform>(), Stretch());
+
+            AspectRatioFitter fitter = root.GetComponent<AspectRatioFitter>();
+            fitter.aspectMode = AspectRatioFitter.AspectMode.FitInParent;
+            fitter.aspectRatio = 9f / 16f;
+
+            return root;
         }
 
         private static GameObject CreatePanel(string name, Transform parent)
