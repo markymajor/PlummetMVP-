@@ -29,7 +29,7 @@ namespace PlummetEditor
             ConfigureWallDetails();
             ConfigureObstaclePool(pool);
             DisableStraightWallColliders();
-            EnsurePortraitCameraViewport();
+            EnsureGameplayCamera();
             PathManager pathManager = EnsurePathManager();
 
             Canvas canvas = Object.FindFirstObjectByType<Canvas>();
@@ -356,7 +356,7 @@ namespace PlummetEditor
             }
         }
 
-        private static void EnsurePortraitCameraViewport()
+        private static void EnsureGameplayCamera()
         {
             Camera camera = Camera.main;
             if (camera == null)
@@ -370,16 +370,15 @@ namespace PlummetEditor
             }
 
             camera.backgroundColor = Color.black;
+            camera.rect = new Rect(0f, 0f, 1f, 1f);
 
             PortraitViewportFitter fitter = camera.GetComponent<PortraitViewportFitter>();
-            if (fitter == null)
+            if (fitter != null)
             {
-                fitter = camera.gameObject.AddComponent<PortraitViewportFitter>();
+                Object.DestroyImmediate(fitter);
             }
 
-            fitter.ApplyViewport();
             EditorUtility.SetDirty(camera);
-            EditorUtility.SetDirty(fitter);
         }
 
         private static void DisableStraightWallColliders()
@@ -442,18 +441,42 @@ namespace PlummetEditor
 
         private static GameObject CreatePortraitUiRoot(Transform parent)
         {
-            GameObject root = new GameObject("Portrait Phone Frame", typeof(RectTransform), typeof(AspectRatioFitter));
+            RectTransform leftBar = CreateLetterboxBar(parent, "Left Letterbox Bar");
+            RectTransform rightBar = CreateLetterboxBar(parent, "Right Letterbox Bar");
+            RectTransform topBar = CreateLetterboxBar(parent, "Top Letterbox Bar");
+            RectTransform bottomBar = CreateLetterboxBar(parent, "Bottom Letterbox Bar");
+
+            GameObject root = new GameObject("Portrait Phone Frame", typeof(RectTransform), typeof(PortraitScreenFrame));
             root.transform.SetParent(parent, false);
-            ApplyRect(root.GetComponent<RectTransform>(), Stretch());
-
             RectTransform rect = root.GetComponent<RectTransform>();
+            rect.anchorMin = new Vector2(0.5f, 0.5f);
+            rect.anchorMax = new Vector2(0.5f, 0.5f);
             rect.pivot = new Vector2(0.5f, 0.5f);
+            rect.anchoredPosition = Vector2.zero;
+            rect.sizeDelta = new Vector2(1080f, 1920f);
 
-            AspectRatioFitter fitter = root.GetComponent<AspectRatioFitter>();
-            fitter.aspectMode = AspectRatioFitter.AspectMode.FitInParent;
-            fitter.aspectRatio = 9f / 16f;
+            PortraitScreenFrame screenFrame = root.GetComponent<PortraitScreenFrame>();
+            screenFrame.Configure(rect, leftBar, rightBar, topBar, bottomBar);
+            EditorUtility.SetDirty(screenFrame);
 
             return root;
+        }
+
+        private static RectTransform CreateLetterboxBar(Transform parent, string name)
+        {
+            GameObject bar = new GameObject(name, typeof(RectTransform), typeof(Image));
+            bar.transform.SetParent(parent, false);
+
+            RectTransform rect = bar.GetComponent<RectTransform>();
+            rect.anchorMin = new Vector2(0.5f, 0.5f);
+            rect.anchorMax = new Vector2(0.5f, 0.5f);
+            rect.pivot = new Vector2(0.5f, 0.5f);
+            rect.sizeDelta = Vector2.zero;
+
+            Image image = bar.GetComponent<Image>();
+            image.color = Color.black;
+            image.raycastTarget = false;
+            return rect;
         }
 
         private static GameObject CreatePanel(Transform parent, string name)

@@ -46,6 +46,8 @@ namespace Plummet
             Instance = this;
             Application.targetFrameRate = 60;
             Screen.orientation = ScreenOrientation.Portrait;
+            EnsureFullCameraRender();
+            DisableLegacyFullScreenMatte();
         }
 
         private void Start()
@@ -136,6 +138,33 @@ namespace Plummet
 #else
             return Input.GetKeyDown(KeyCode.Space) || Input.GetMouseButtonDown(0);
 #endif
+        }
+
+        private static void EnsureFullCameraRender()
+        {
+            Camera camera = Camera.main;
+            if (camera == null)
+            {
+                return;
+            }
+
+            PortraitViewportFitter oldFitter = camera.GetComponent<PortraitViewportFitter>();
+            if (oldFitter != null)
+            {
+                oldFitter.enabled = false;
+            }
+
+            camera.rect = new Rect(0f, 0f, 1f, 1f);
+            camera.backgroundColor = Color.black;
+        }
+
+        private static void DisableLegacyFullScreenMatte()
+        {
+            GameObject oldMatte = GameObject.Find("Portrait Letterbox Matte");
+            if (oldMatte != null)
+            {
+                oldMatte.SetActive(false);
+            }
         }
     }
 }
