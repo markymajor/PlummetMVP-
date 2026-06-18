@@ -29,6 +29,7 @@ namespace PlummetEditor
             ConfigureWallDetails();
             ConfigureObstaclePool(pool);
             DisableStraightWallColliders();
+            EnsurePortraitCameraViewport();
             PathManager pathManager = EnsurePathManager();
 
             Canvas canvas = Object.FindFirstObjectByType<Canvas>();
@@ -355,6 +356,32 @@ namespace PlummetEditor
             }
         }
 
+        private static void EnsurePortraitCameraViewport()
+        {
+            Camera camera = Camera.main;
+            if (camera == null)
+            {
+                camera = Object.FindFirstObjectByType<Camera>();
+            }
+
+            if (camera == null)
+            {
+                return;
+            }
+
+            camera.backgroundColor = Color.black;
+
+            PortraitViewportFitter fitter = camera.GetComponent<PortraitViewportFitter>();
+            if (fitter == null)
+            {
+                fitter = camera.gameObject.AddComponent<PortraitViewportFitter>();
+            }
+
+            fitter.ApplyViewport();
+            EditorUtility.SetDirty(camera);
+            EditorUtility.SetDirty(fitter);
+        }
+
         private static void DisableStraightWallColliders()
         {
             BoxCollider2D[] colliders = Object.FindObjectsByType<BoxCollider2D>(FindObjectsSortMode.None);
@@ -415,17 +442,12 @@ namespace PlummetEditor
 
         private static GameObject CreatePortraitUiRoot(Transform parent)
         {
-            GameObject matte = new GameObject("Portrait Letterbox Matte", typeof(RectTransform), typeof(Image));
-            matte.transform.SetParent(parent, false);
-            ApplyRect(matte.GetComponent<RectTransform>(), Stretch());
-
-            Image matteImage = matte.GetComponent<Image>();
-            matteImage.color = Color.black;
-            matteImage.raycastTarget = false;
-
             GameObject root = new GameObject("Portrait Phone Frame", typeof(RectTransform), typeof(AspectRatioFitter));
             root.transform.SetParent(parent, false);
             ApplyRect(root.GetComponent<RectTransform>(), Stretch());
+
+            RectTransform rect = root.GetComponent<RectTransform>();
+            rect.pivot = new Vector2(0.5f, 0.5f);
 
             AspectRatioFitter fitter = root.GetComponent<AspectRatioFitter>();
             fitter.aspectMode = AspectRatioFitter.AspectMode.FitInParent;

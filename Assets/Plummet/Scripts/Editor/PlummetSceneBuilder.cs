@@ -111,7 +111,8 @@ namespace PlummetEditor
             Camera camera = cameraObject.AddComponent<Camera>();
             camera.orthographic = true;
             camera.orthographicSize = 5.5f;
-            camera.backgroundColor = new Color(0.1f, 0.1f, 0.12f);
+            camera.backgroundColor = Color.black;
+            cameraObject.AddComponent<PortraitViewportFitter>();
             cameraObject.transform.position = new Vector3(0f, 0f, -10f);
             return camera;
         }
@@ -379,17 +380,12 @@ namespace PlummetEditor
 
         private static GameObject CreatePortraitUiRoot(Transform parent)
         {
-            GameObject matte = new GameObject("Portrait Letterbox Matte", typeof(RectTransform), typeof(Image));
-            matte.transform.SetParent(parent, false);
-            ApplyRect(matte.GetComponent<RectTransform>(), Stretch());
-
-            Image matteImage = matte.GetComponent<Image>();
-            matteImage.color = Color.black;
-            matteImage.raycastTarget = false;
-
             GameObject root = new GameObject("Portrait Phone Frame", typeof(RectTransform), typeof(AspectRatioFitter));
             root.transform.SetParent(parent, false);
             ApplyRect(root.GetComponent<RectTransform>(), Stretch());
+
+            RectTransform rect = root.GetComponent<RectTransform>();
+            rect.pivot = new Vector2(0.5f, 0.5f);
 
             AspectRatioFitter fitter = root.GetComponent<AspectRatioFitter>();
             fitter.aspectMode = AspectRatioFitter.AspectMode.FitInParent;
