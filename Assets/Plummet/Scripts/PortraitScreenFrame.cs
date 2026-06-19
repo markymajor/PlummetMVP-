@@ -13,11 +13,16 @@ namespace Plummet
         [SerializeField] private RectTransform bottomBar;
         [SerializeField] private float targetAspect = 9f / 16f;
 
+        private Canvas rootCanvas;
         private RectTransform parentRect;
         private Vector2 lastParentSize;
+        private int lastScreenWidth;
+        private int lastScreenHeight;
+        private float lastScaleFactor;
 
         private void OnEnable()
         {
+            rootCanvas = GetComponentInParent<Canvas>();
             parentRect = transform.parent as RectTransform;
             ApplyFrame();
         }
@@ -30,7 +35,11 @@ namespace Plummet
             }
 
             Vector2 parentSize = parentRect != null ? parentRect.rect.size : Vector2.zero;
-            if (parentSize == lastParentSize)
+            float scaleFactor = rootCanvas != null ? rootCanvas.scaleFactor : 1f;
+            if (parentSize == lastParentSize
+                && Screen.width == lastScreenWidth
+                && Screen.height == lastScreenHeight
+                && Mathf.Approximately(scaleFactor, lastScaleFactor))
             {
                 return;
             }
@@ -63,25 +72,57 @@ namespace Plummet
 
             Vector2 parentSize = parentRect.rect.size;
             lastParentSize = parentSize;
+            lastScreenWidth = Screen.width;
+            lastScreenHeight = Screen.height;
+            lastScaleFactor = rootCanvas != null ? rootCanvas.scaleFactor : 1f;
+
             if (parentSize.x <= 0f || parentSize.y <= 0f)
             {
                 return;
             }
 
-            float parentAspect = parentSize.x / parentSize.y;
-            Vector2 phoneSize = parentAspect > targetAspect
-                ? new Vector2(parentSize.y * targetAspect, parentSize.y)
-                : new Vector2(parentSize.x, parentSize.x / targetAspect);
+            int screenWidth = Mathf.Max(1, Screen.width);
+            int screenHeight = Mathf.Max(1, Screen.height);
+            float screenAspect = (float)screenWidth / screenHeight;
+            Vector2 phonePixels = screenAspect > targetAspect
+                ? new Vector2(screenHeight * targetAspect, screenHeight)
+                : new Vector2(screenWidth, screenWidth / targetAspect);
 
-            SetCentered(phoneFrame, Vector2.zero, phoneSize);
+            float scaleFactor = Mathf.Max(0.01f, lastScaleFactor);
+            Vector2 phoneSize = phonePixels / scaleFactor;
+            Vector2 frameCenter = GetScreenCenterInParent();
 
-            float sideWidth = Mathf.Max(0f, (parentSize.x - phoneSize.x) * 0.5f);
-            float verticalHeight = Mathf.Max(0f, (parentSize.y - phoneSize.y) * 0.5f);
+            SetCentered(phoneFrame, frameCenter, phoneSize);
 
-            SetBar(leftBar, new Vector2(-phoneSize.x * 0.5f - sideWidth * 0.5f, 0f), new Vector2(sideWidth, parentSize.y));
-            SetBar(rightBar, new Vector2(phoneSize.x * 0.5f + sideWidth * 0.5f, 0f), new Vector2(sideWidth, parentSize.y));
-            SetBar(topBar, new Vector2(0f, phoneSize.y * 0.5f + verticalHeight * 0.5f), new Vector2(parentSize.x, verticalHeight));
-            SetBar(bottomBar, new Vector2(0f, -phoneSize.y * 0.5f - verticalHeight * 0.5f), new Vector2(parentSize.x, verticalHeight));
+            float sideWidth = Mathf.Max(0f, (screenWidth - phonePixels.x) * 0.5f) / scaleFactor;
+            float verticalHeight = Mathf.Max(0f, (screenHeight - phonePixels.y) * 0.5f) / scaleFactor;
+
+            SetBar(leftBar, frameCenter + new Vector2(-phoneSize.x * 0.5f - sideWidth * 0.5f, 0f), new Vector2(sideWidth, parentSize.y));
+            SetBar(rightBar, frameCenter + new Vector2(phoneSize.x * 0.5f + sideWidth * 0.5f, 0f), new Vector2(sideWidth, parentSize.y));
+            SetBar(topBar, frameCenter + new Vector2(0f, phoneSize.y * 0.5f + verticalHeight * 0.5f), new Vector2(parentSize.x, verticalHeight));
+            SetBar(bottomBar, frameCenter + new Vector2(0f, -phoneSize.y * 0.5f - verticalHeight * 0.5f), new Vector2(parentSize.x, verticalHeight));
+        }
+
+        private Vector2 GetScreenCenterInParent()
+        {
+            if (parentRect == null)
+            {
+                return Vector2.zero;
+            }
+
+            Camera uiCamera = null;
+            if (rootCanvas != null && rootCanvas.renderMode != RenderMode.ScreenSpaceOverlay)
+            {
+                uiCamera = rootCanvas.worldCamera;
+            }
+
+            Vector2 screenCenter = new Vector2(Screen.width * 0.5f, Screen.height * 0.5f);
+            if (RectTransformUtility.ScreenPointToLocalPointInRectangle(parentRect, screenCenter, uiCamera, out Vector2 localPoint))
+            {
+                return localPoint;
+            }
+
+            return Vector2.zero;
         }
 
         private static void SetCentered(RectTransform rect, Vector2 position, Vector2 size)
