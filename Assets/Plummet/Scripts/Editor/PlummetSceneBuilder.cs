@@ -322,7 +322,8 @@ namespace PlummetEditor
             AddImage(startPanel.transform, "Start Shaft Lower Details", LoadGameSprite("start-shaft-lower-details.png"), Anchor(new Vector2(0.5f, 0.145f), new Vector2(1080f, 430f)), false);
             AddImage(startPanel.transform, "Title", LoadGameSprite("Title.png"), Anchor(new Vector2(0.5f, 0.79f), new Vector2(850f, 215f)));
             AddText(startPanel.transform, "Tap Text", "TAP TO DROP", font, Anchor(new Vector2(0.5f, 0.665f), new Vector2(500f, 72f)), 42, TextAnchor.MiddleCenter).color = new Color(0.12f, 0.12f, 0.14f, 0.75f);
-            AddImage(startPanel.transform, "Standing Mark", LoadGameSprite("mark.png"), Anchor(new Vector2(0.5f, 0.405f), new Vector2(130f, 300f)));
+            RectTransform standingMark = AddImage(startPanel.transform, "Standing Mark", LoadGameSprite("mark.png"), Anchor(new Vector2(0.5f, 0.405f), new Vector2(130f, 300f))).rectTransform;
+            CreateTrapdoor(startPanel.transform, standingMark, out RectTransform leftDoor, out RectTransform rightDoor);
             AddText(startPanel.transform, "Start Text", "Start", font, Anchor(new Vector2(0.8f, 0.17f), new Vector2(220f, 78f)), 48, TextAnchor.MiddleCenter);
             AddText(startPanel.transform, "Best Value", $"Best {PlayerPrefs.GetInt("PlummetHighScore", 0):N0}", font, Anchor(new Vector2(0.5f, 0.09f), new Vector2(500f, 60f)), 30, TextAnchor.MiddleCenter).color = new Color(1f, 1f, 1f, 0.82f);
             Button playButton = AddTextButton(startPanel.transform, "Play Button", string.Empty, font, Stretch());
@@ -369,6 +370,12 @@ namespace PlummetEditor
             Set(uiManager, "homeButton", homeButton);
             Set(uiManager, "shareButton", shareButton);
 
+            IntroTransition introTransition = canvasObject.AddComponent<IntroTransition>();
+            Set(introTransition, "leftDoor", leftDoor);
+            Set(introTransition, "rightDoor", rightDoor);
+            Set(introTransition, "fallingActor", standingMark);
+            Set(uiManager, "introTransition", introTransition);
+
             instructionDistancePanel.SetActive(false);
             instructionSpeedPanel.SetActive(false);
             hudPanel.SetActive(false);
@@ -413,6 +420,48 @@ namespace PlummetEditor
 
             Image image = bar.GetComponent<Image>();
             image.color = Color.black;
+            image.raycastTarget = false;
+            return rect;
+        }
+
+        private static void CreateTrapdoor(Transform parent, RectTransform standingMark, out RectTransform leftDoor, out RectTransform rightDoor)
+        {
+            const float halfWidth = 180f;
+            const float doorHeight = 70f;
+            Color doorColor = new Color(0.42f, 0.43f, 0.46f, 1f);
+
+            GameObject container = new GameObject("Trapdoor", typeof(RectTransform));
+            container.transform.SetParent(parent, false);
+            RectTransform rect = container.GetComponent<RectTransform>();
+            rect.anchorMin = new Vector2(0.5f, 0.345f);
+            rect.anchorMax = new Vector2(0.5f, 0.345f);
+            rect.pivot = new Vector2(0.5f, 0.5f);
+            rect.sizeDelta = new Vector2(halfWidth * 2f, doorHeight);
+            rect.anchoredPosition = Vector2.zero;
+
+            leftDoor = CreateDoorHalf(rect, "Left Door", new Vector2(0f, 0.5f), halfWidth, doorHeight, doorColor);
+            rightDoor = CreateDoorHalf(rect, "Right Door", new Vector2(1f, 0.5f), halfWidth, doorHeight, doorColor);
+
+            if (standingMark != null)
+            {
+                container.transform.SetSiblingIndex(standingMark.GetSiblingIndex() + 1);
+            }
+        }
+
+        private static RectTransform CreateDoorHalf(Transform parent, string name, Vector2 edge, float width, float height, Color color)
+        {
+            GameObject door = new GameObject(name, typeof(RectTransform), typeof(Image));
+            door.transform.SetParent(parent, false);
+
+            RectTransform rect = door.GetComponent<RectTransform>();
+            rect.anchorMin = edge;
+            rect.anchorMax = edge;
+            rect.pivot = edge;
+            rect.sizeDelta = new Vector2(width, height);
+            rect.anchoredPosition = Vector2.zero;
+
+            Image image = door.GetComponent<Image>();
+            image.color = color;
             image.raycastTarget = false;
             return rect;
         }

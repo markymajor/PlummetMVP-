@@ -21,6 +21,7 @@ namespace Plummet
         [SerializeField] private Button resetButton;
         [SerializeField] private Button homeButton;
         [SerializeField] private Button shareButton;
+        [SerializeField] private IntroTransition introTransition;
 
         private bool shouldShowOpeningInstructions = true;
         private bool showingOpeningInstructions;
@@ -53,12 +54,28 @@ namespace Plummet
             SetInstructionPanels(false, false);
             hudPanel.SetActive(false);
             gameOverPanel.SetActive(false);
+
+            if (introTransition != null)
+            {
+                introTransition.ResetIntro();
+            }
         }
 
         public void BeginStartFlow()
         {
             if (startPanel != null && !startPanel.activeSelf)
             {
+                return;
+            }
+
+            if (introTransition != null)
+            {
+                if (introTransition.IsPlaying)
+                {
+                    return;
+                }
+
+                introTransition.Play(() => GameManager.Instance.StartRun());
                 return;
             }
 
