@@ -22,6 +22,9 @@ namespace Plummet
         [SerializeField] private Button homeButton;
         [SerializeField] private Button shareButton;
 
+        private bool shouldShowOpeningInstructions = true;
+        private bool showingOpeningInstructions;
+
         private void Awake()
         {
             EnsurePanelsUsePortraitFrame();
@@ -38,6 +41,14 @@ namespace Plummet
         public void ShowStart()
         {
             EnsurePanelsUsePortraitFrame();
+            if (shouldShowOpeningInstructions && HasInstructionPanels())
+            {
+                shouldShowOpeningInstructions = false;
+                showingOpeningInstructions = true;
+                ShowInstructionDistance();
+                return;
+            }
+
             startPanel.SetActive(true);
             SetInstructionPanels(false, false);
             hudPanel.SetActive(false);
@@ -51,13 +62,7 @@ namespace Plummet
                 return;
             }
 
-            if (instructionDistancePanel == null || instructionSpeedPanel == null)
-            {
-                GameManager.Instance.StartRun();
-                return;
-            }
-
-            ShowInstructionDistance();
+            GameManager.Instance.StartRun();
         }
 
         public void ShowInstructionDistance()
@@ -115,11 +120,19 @@ namespace Plummet
 
         public void OnSpeedNextPressed()
         {
+            if (showingOpeningInstructions)
+            {
+                showingOpeningInstructions = false;
+                ShowStart();
+                return;
+            }
+
             GameManager.Instance.StartRun();
         }
 
         public void OnDistanceBackPressed()
         {
+            showingOpeningInstructions = false;
             ShowStart();
         }
 
@@ -165,6 +178,11 @@ namespace Plummet
             {
                 instructionSpeedPanel.SetActive(speedVisible);
             }
+        }
+
+        private bool HasInstructionPanels()
+        {
+            return instructionDistancePanel != null && instructionSpeedPanel != null;
         }
 
         private void EnsurePanelsUsePortraitFrame()
