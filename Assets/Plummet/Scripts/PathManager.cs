@@ -17,7 +17,7 @@ namespace Plummet
         [SerializeField] private float maximumCenterX = 1.0f;
         [SerializeField] private float centerStep = 0.42f;
         [SerializeField] private float wallThickness = 0.78f;
-        [SerializeField] private Color wallColor = new Color(0.015f, 0.19f, 0.23f, 1f);
+        [SerializeField] private Color wallColor = new Color(0.008f, 0.208f, 0.282f, 1f);
 
         private readonly List<PathSegment> segments = new List<PathSegment>();
 

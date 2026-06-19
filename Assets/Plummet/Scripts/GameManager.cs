@@ -18,9 +18,9 @@ namespace Plummet
         public static GameManager Instance { get; private set; }
 
         [Header("Difficulty")]
-        [SerializeField] private float baseScrollSpeed = 3.25f;
-        [SerializeField] private float maxScrollSpeed = 8.5f;
-        [SerializeField] private float speedIncreasePerSecond = 0.045f;
+        [SerializeField] private float baseScrollSpeed = 5.5f;
+        [SerializeField] private float maxScrollSpeed = 12f;
+        [SerializeField] private float speedIncreasePerSecond = 0.06f;
 
         [Header("Scene References")]
         [SerializeField] private PlayerController player;
