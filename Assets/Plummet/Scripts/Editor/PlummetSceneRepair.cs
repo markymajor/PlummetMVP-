@@ -126,6 +126,26 @@ namespace PlummetEditor
             Set(uiManager, "homeButton", homeButton);
             Set(uiManager, "shareButton", shareButton);
 
+            // --- Choose Player (skins) ---
+            Button chooseSkinButton = AddTextButton(startPanel.transform, "Choose Player Button", "Players", Anchor(0.22f, 0.17f, 320f, 80f));
+
+            GameObject chooseSkinPanel = CreatePanel(uiRoot, "Choose Skin Panel");
+            AddImage(chooseSkinPanel.transform, "Choose Background", LoadGameSprite("main-menu-background_2014-12-19_adjusted.png"), Stretch(), false);
+            AddText(chooseSkinPanel.transform, "Choose Title", "CHOOSE YOUR PLAYER", Anchor(0.5f, 0.85f, 960f, 110f), 54, TextAnchor.MiddleCenter, Color.white);
+            RectTransform cardsRect = CreateChildRect(chooseSkinPanel.transform, "Cards", Anchor(0.5f, 0.52f, 1000f, 420f));
+            Button chooseSkinBackButton = AddTextButton(chooseSkinPanel.transform, "Choose Back Button", "Back", Anchor(0.5f, 0.12f, 320f, 96f));
+            SkinPickerUI picker = chooseSkinPanel.AddComponent<SkinPickerUI>();
+            Set(picker, "content", cardsRect);
+            Set(picker, "player", player);
+
+            SkinLibrary skinLibrary = EnsureSkinLibrary();
+
+            Set(uiManager, "chooseSkinPanel", chooseSkinPanel);
+            Set(uiManager, "chooseSkinButton", chooseSkinButton);
+            Set(uiManager, "chooseSkinBackButton", chooseSkinBackButton);
+            EditorUtility.SetDirty(skinLibrary);
+
+            chooseSkinPanel.SetActive(false);
             instructionDistancePanel.SetActive(false);
             instructionSpeedPanel.SetActive(false);
             hudPanel.SetActive(false);
@@ -750,6 +770,163 @@ namespace PlummetEditor
                 eventSystem.gameObject.AddComponent<StandaloneInputModule>();
             }
 #endif
+        }
+
+        private static RectTransform CreateChildRect(Transform parent, string name, RectSpec spec)
+        {
+            GameObject go = new GameObject(name, typeof(RectTransform));
+            go.transform.SetParent(parent, false);
+            RectTransform rect = (RectTransform)go.transform;
+            ApplyRect(rect, spec);
+            return rect;
+        }
+
+        private static SkinLibrary EnsureSkinLibrary()
+        {
+            SkinLibrary library = Object.FindFirstObjectByType<SkinLibrary>();
+            if (library == null)
+            {
+                library = new GameObject("Skin Library").AddComponent<SkinLibrary>();
+            }
+
+            System.Collections.Generic.List<Skin> skins = new System.Collections.Generic.List<Skin>();
+
+            Sprite[] markFrames = LoadFallingFrames();
+            Sprite markStanding = LoadGameSprite("mark.png");
+            skins.Add(new Skin("mark", "Mark", markStanding, markFrames.Length > 0 ? markFrames : new[] { markStanding }));
+
+            AddKidSkin(skins, "harrison", "Harrison");
+            AddKidSkin(skins, "evie", "Evie");
+
+            library.SetSkins(skins);
+            return library;
+        }
+
+        private static void AddKidSkin(System.Collections.Generic.List<Skin> skins, string id, string displayName)
+        {
+            Sprite sprite = LoadSkinSprite(id);
+            if (sprite != null)
+            {
+                skins.Add(new Skin(id, displayName, sprite, new[] { sprite }));
+            }
+        }
+
+        private static Sprite LoadSkinSprite(string id)
+        {
+            return AssetDatabase.LoadAssetAtPath<Sprite>($"{GamePath}skins/{id}.png");
+        }
+
+        [MenuItem("Plummet/Skins/Process Dropped Art")]
+        public static void ProcessDroppedArt()
+        {
+            const string dropDir = "Assets/Plummet/SkinDrop";
+            string outDir = $"{GamePath}skins";
+            Directory.CreateDirectory(dropDir);
+            Directory.CreateDirectory(outDir);
+
+            string[] files = Directory.GetFiles(dropDir, "*.png");
+            int count = 0;
+            foreach (string file in files)
+            {
+                Texture2D tex = new Texture2D(2, 2, TextureFormat.RGBA32, false);
+                if (!tex.LoadImage(File.ReadAllBytes(file)))
+                {
+                    continue;
+                }
+
+                Texture2D stripped = StripGreen(tex);
+                string id = Path.GetFileNameWithoutExtension(file).ToLowerInvariant();
+                File.WriteAllBytes(Path.Combine(outDir, id + ".png"), stripped.EncodeToPNG());
+                count++;
+            }
+
+            AssetDatabase.Refresh();
+            ConfigureSprites();
+            Debug.Log($"Plummet: processed {count} skin image(s) into {outDir}. Now run Plummet/Repair Open Scene to wire them.");
+        }
+
+        private static Texture2D StripGreen(Texture2D src)
+        {
+            int w = src.width;
+            int h = src.height;
+            Color32[] px = src.GetPixels32();
+
+            Color32 c0 = px[0];
+            Color32 c1 = px[w - 1];
+            Color32 c2 = px[(h - 1) * w];
+            Color32 c3 = px[h * w - 1];
+            float kr = (c0.r + c1.r + c2.r + c3.r) / 4f;
+            float kg = (c0.g + c1.g + c2.g + c3.g) / 4f;
+            float kb = (c0.b + c1.b + c2.b + c3.b) / 4f;
+
+            const float tol = 110f;
+            const float soft = 45f;
+            for (int i = 0; i < px.Length; i++)
+            {
+                Color32 p = px[i];
+                float dr = p.r - kr;
+                float dg = p.g - kg;
+                float db = p.b - kb;
+                float dist = Mathf.Sqrt(dr * dr + dg * dg + db * db);
+
+                if (dist <= tol)
+                {
+                    p.a = 0;
+                }
+                else if (dist <= tol + soft)
+                {
+                    p.a = (byte)Mathf.RoundToInt(p.a * ((dist - tol) / soft));
+                }
+                else if (p.g > p.r + 25 && p.g > p.b + 25)
+                {
+                    p.g = (byte)Mathf.Min(p.g, (p.r + p.b) / 2 + 10);
+                }
+
+                px[i] = p;
+            }
+
+            Texture2D outTex = new Texture2D(w, h, TextureFormat.RGBA32, false);
+            outTex.SetPixels32(px);
+            outTex.Apply();
+            return TrimTransparent(outTex);
+        }
+
+        private static Texture2D TrimTransparent(Texture2D src)
+        {
+            int w = src.width;
+            int h = src.height;
+            Color32[] px = src.GetPixels32();
+
+            int minX = w;
+            int minY = h;
+            int maxX = -1;
+            int maxY = -1;
+            for (int y = 0; y < h; y++)
+            {
+                for (int x = 0; x < w; x++)
+                {
+                    if (px[y * w + x].a > 8)
+                    {
+                        if (x < minX) minX = x;
+                        if (x > maxX) maxX = x;
+                        if (y < minY) minY = y;
+                        if (y > maxY) maxY = y;
+                    }
+                }
+            }
+
+            if (maxX < minX || maxY < minY)
+            {
+                return src;
+            }
+
+            int cw = maxX - minX + 1;
+            int ch = maxY - minY + 1;
+            Color[] block = src.GetPixels(minX, minY, cw, ch);
+            Texture2D outTex = new Texture2D(cw, ch, TextureFormat.RGBA32, false);
+            outTex.SetPixels(block);
+            outTex.Apply();
+            return outTex;
         }
 
         private readonly struct RectSpec

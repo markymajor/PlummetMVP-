@@ -22,6 +22,9 @@ namespace Plummet
         [SerializeField] private Button homeButton;
         [SerializeField] private Button shareButton;
         [SerializeField] private IntroTransition introTransition;
+        [SerializeField] private GameObject chooseSkinPanel;
+        [SerializeField] private Button chooseSkinButton;
+        [SerializeField] private Button chooseSkinBackButton;
 
         private bool shouldShowOpeningInstructions = true;
         private bool showingOpeningInstructions;
@@ -37,11 +40,57 @@ namespace Plummet
             WireButton(resetButton, OnResetPressed);
             WireButton(homeButton, OnHomePressed);
             WireButton(shareButton, OnSharePressed);
+            WireButton(chooseSkinButton, ShowChooseSkin);
+            WireButton(chooseSkinBackButton, OnChooseSkinBack);
+        }
+
+        public void ShowChooseSkin()
+        {
+            EnsurePanelsUsePortraitFrame();
+            if (startPanel != null)
+            {
+                startPanel.SetActive(false);
+            }
+
+            SetInstructionPanels(false, false);
+            if (hudPanel != null)
+            {
+                hudPanel.SetActive(false);
+            }
+
+            if (gameOverPanel != null)
+            {
+                gameOverPanel.SetActive(false);
+            }
+
+            if (chooseSkinPanel != null)
+            {
+                chooseSkinPanel.SetActive(true);
+            }
+        }
+
+        private void OnChooseSkinBack()
+        {
+            if (chooseSkinPanel != null)
+            {
+                chooseSkinPanel.SetActive(false);
+            }
+
+            ShowStart();
+        }
+
+        private void HideChooseSkin()
+        {
+            if (chooseSkinPanel != null)
+            {
+                chooseSkinPanel.SetActive(false);
+            }
         }
 
         public void ShowStart()
         {
             EnsurePanelsUsePortraitFrame();
+            HideChooseSkin();
             if (shouldShowOpeningInstructions && HasInstructionPanels())
             {
                 shouldShowOpeningInstructions = false;
@@ -85,6 +134,7 @@ namespace Plummet
         public void ShowInstructionDistance()
         {
             EnsurePanelsUsePortraitFrame();
+            HideChooseSkin();
             startPanel.SetActive(false);
             SetInstructionPanels(true, false);
             hudPanel.SetActive(false);
@@ -94,6 +144,7 @@ namespace Plummet
         public void ShowInstructionSpeed()
         {
             EnsurePanelsUsePortraitFrame();
+            HideChooseSkin();
             startPanel.SetActive(false);
             SetInstructionPanels(false, true);
             hudPanel.SetActive(false);
@@ -103,6 +154,7 @@ namespace Plummet
         public void ShowHud()
         {
             EnsurePanelsUsePortraitFrame();
+            HideChooseSkin();
             startPanel.SetActive(false);
             SetInstructionPanels(false, false);
             hudPanel.SetActive(true);
@@ -112,6 +164,7 @@ namespace Plummet
         public void ShowGameOver(int score, int highScore)
         {
             EnsurePanelsUsePortraitFrame();
+            HideChooseSkin();
             startPanel.SetActive(false);
             SetInstructionPanels(false, false);
             hudPanel.SetActive(false);

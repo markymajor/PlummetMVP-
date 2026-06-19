@@ -31,6 +31,49 @@ namespace Plummet
             defaultSprite = spriteRenderer != null ? spriteRenderer.sprite : null;
         }
 
+        private void Start()
+        {
+            ApplySelectedSkin();
+        }
+
+        /// <summary>
+        /// Swaps the player's sprite and falling frames to the chosen skin from
+        /// <see cref="SkinLibrary"/>. Safe to call when no library is present.
+        /// </summary>
+        public void ApplySelectedSkin()
+        {
+            if (SkinLibrary.Instance == null)
+            {
+                return;
+            }
+
+            Skin skin = SkinLibrary.Instance.Selected;
+            if (skin == null)
+            {
+                return;
+            }
+
+            if (skin.FallingFrames != null && skin.FallingFrames.Length > 0)
+            {
+                fallingFrames = skin.FallingFrames;
+            }
+
+            if (spriteRenderer == null)
+            {
+                spriteRenderer = GetComponent<SpriteRenderer>();
+            }
+
+            Sprite first = GetFirstFallingFrame();
+            defaultSprite = skin.Standing != null ? skin.Standing : (first != null ? first : defaultSprite);
+
+            if (spriteRenderer != null)
+            {
+                spriteRenderer.sprite = first != null ? first : defaultSprite;
+            }
+
+            currentFallingFrame = -1;
+        }
+
         private void Update()
         {
             if (GameManager.Instance == null || !GameManager.Instance.IsPlaying)
@@ -53,6 +96,7 @@ namespace Plummet
 
         public void ResetPlayer()
         {
+            ApplySelectedSkin();
             lastInput = 0f;
             fallingFrameTimer = 0f;
             currentFallingFrame = -1;
