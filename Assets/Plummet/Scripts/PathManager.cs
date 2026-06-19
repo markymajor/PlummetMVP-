@@ -154,7 +154,7 @@ namespace Plummet
 
         private float NextWidth(float current)
         {
-            float difficultyT = GameManager.Instance != null ? Mathf.InverseLerp(3.25f, 8.5f, GameManager.Instance.ScrollSpeed) : 0f;
+            float difficultyT = GameManager.Instance != null ? GameManager.Instance.DifficultyT : 0f;
             float targetMinimum = Mathf.Lerp(startWidth, minimumWidth, difficultyT);
             return Mathf.Clamp(current + Random.Range(-widthStep, widthStep), targetMinimum, maximumWidth);
         }

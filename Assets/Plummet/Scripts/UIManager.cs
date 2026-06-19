@@ -104,8 +104,15 @@ namespace Plummet
 
         public void SetScore(int score, int highScore)
         {
-            scoreText.text = score.ToString("N0");
-            highScoreText.text = string.Empty;
+            if (scoreText != null)
+            {
+                scoreText.text = score.ToString("N0");
+            }
+
+            if (highScoreText != null)
+            {
+                highScoreText.text = highScore > 0 ? $"Best {highScore:N0}" : string.Empty;
+            }
         }
 
         public void OnPlayPressed()

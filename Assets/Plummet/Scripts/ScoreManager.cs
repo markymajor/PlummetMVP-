@@ -13,6 +13,7 @@ namespace Plummet
         public int HighScore { get; private set; }
 
         private float rawScore;
+        private int lastDisplayedScore = -1;
 
         private void Awake()
         {
@@ -28,7 +29,7 @@ namespace Plummet
 
             rawScore += GameManager.Instance.ScrollSpeed * scoreMultiplier * Time.deltaTime;
             Score = Mathf.FloorToInt(rawScore);
-            uiManager.SetScore(Score, HighScore);
+            PushScoreToUi();
         }
 
         public void ResetScore()
@@ -36,6 +37,18 @@ namespace Plummet
             rawScore = 0f;
             Score = 0;
             HighScore = PlayerPrefs.GetInt(HighScoreKey, 0);
+            lastDisplayedScore = -1;
+            PushScoreToUi();
+        }
+
+        private void PushScoreToUi()
+        {
+            if (Score == lastDisplayedScore)
+            {
+                return;
+            }
+
+            lastDisplayedScore = Score;
             uiManager.SetScore(Score, HighScore);
         }
 

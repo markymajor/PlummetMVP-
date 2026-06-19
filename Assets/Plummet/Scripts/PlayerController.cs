@@ -199,6 +199,11 @@ namespace Plummet
 
         private void OnTriggerEnter2D(Collider2D other)
         {
+            if (GameManager.Instance == null || !GameManager.Instance.IsPlaying)
+            {
+                return;
+            }
+
             if (other.CompareTag("Obstacle") || other.CompareTag("Wall"))
             {
                 GameManager.Instance.TriggerGameOver();

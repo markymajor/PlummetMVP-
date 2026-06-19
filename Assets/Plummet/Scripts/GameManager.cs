@@ -35,6 +35,12 @@ namespace Plummet
         public float ScrollSpeed { get; private set; }
         public bool IsPlaying => State == GameState.Playing;
 
+        /// <summary>
+        /// Difficulty progress in the 0..1 range, derived from the current scroll speed.
+        /// Other systems should read this instead of duplicating the speed constants.
+        /// </summary>
+        public float DifficultyT => Mathf.InverseLerp(baseScrollSpeed, maxScrollSpeed, ScrollSpeed);
+
         private void Awake()
         {
             if (Instance != null && Instance != this)
@@ -46,8 +52,37 @@ namespace Plummet
             Instance = this;
             Application.targetFrameRate = 60;
             Screen.orientation = ScreenOrientation.Portrait;
+            ValidateReferences();
             EnsureFullCameraRender();
             DisableLegacyFullScreenMatte();
+        }
+
+        private void ValidateReferences()
+        {
+            if (player == null)
+            {
+                Debug.LogError("GameManager is missing its PlayerController reference.", this);
+            }
+
+            if (scoreManager == null)
+            {
+                Debug.LogError("GameManager is missing its ScoreManager reference.", this);
+            }
+
+            if (uiManager == null)
+            {
+                Debug.LogError("GameManager is missing its UIManager reference.", this);
+            }
+
+            if (obstacleSpawner == null)
+            {
+                Debug.LogError("GameManager is missing its ObstacleSpawner reference.", this);
+            }
+
+            if (pathManager == null)
+            {
+                Debug.LogError("GameManager is missing its PathManager reference.", this);
+            }
         }
 
         private void Start()
