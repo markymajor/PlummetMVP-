@@ -150,6 +150,9 @@ namespace PlummetEditor
             Set(gameManager, "uiManager", uiManager);
             Set(gameManager, "obstacleSpawner", spawner);
             Set(gameManager, "pathManager", pathManager);
+            SetFloat(gameManager, "baseScrollSpeed", 5.5f);
+            SetFloat(gameManager, "maxScrollSpeed", 12f);
+            SetFloat(gameManager, "speedIncreasePerSecond", 0.06f);
 
             if (spawner != null && pool != null)
             {
@@ -315,11 +318,12 @@ namespace PlummetEditor
             SetFloat(pathManager, "startWidth", 4.05f);
             SetFloat(pathManager, "minimumWidth", 2.45f);
             SetFloat(pathManager, "maximumWidth", 4.75f);
-            SetFloat(pathManager, "maximumCenterX", 1.05f);
-            SetFloat(pathManager, "centerStep", 0.45f);
+            SetFloat(pathManager, "minStep", 0.5f);
+            SetFloat(pathManager, "maxStep", 1.0f);
+            SetFloat(pathManager, "playHalfWidth", 2.65f);
             SetFloat(pathManager, "widthStep", 0.32f);
             SetFloat(pathManager, "wallThickness", 0.82f);
-            SetColor(pathManager, "wallColor", new Color(0.015f, 0.19f, 0.23f, 1f));
+            SetColor(pathManager, "wallColor", new Color(0.008f, 0.208f, 0.282f, 1f));
             pathManager.ResetPath();
             return pathManager;
         }

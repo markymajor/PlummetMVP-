@@ -14,12 +14,15 @@ namespace Plummet
         [SerializeField] private float minimumWidth = 2.55f;
         [SerializeField] private float maximumWidth = 4.65f;
         [SerializeField] private float widthStep = 0.3f;
-        [SerializeField] private float maximumCenterX = 1.0f;
-        [SerializeField] private float centerStep = 0.42f;
+        [SerializeField] private float minStep = 0.5f;
+        [SerializeField] private float maxStep = 1.0f;
+        [SerializeField] private float playHalfWidth = 2.65f;
         [SerializeField] private float wallThickness = 0.78f;
         [SerializeField] private Color wallColor = new Color(0.008f, 0.208f, 0.282f, 1f);
 
         private readonly List<PathSegment> segments = new List<PathSegment>();
+        private readonly int[] stepHistory = new int[4];
+        private int stepHistoryIndex;
 
         private void Start()
         {
@@ -45,6 +48,7 @@ namespace Plummet
         public void ResetPath()
         {
             EnsureSegments();
+            ResetCorridorState();
 
             float y = spawnTopY;
             float topCenter = 0f;
@@ -52,8 +56,7 @@ namespace Plummet
 
             for (int i = segments.Count - 1; i >= 0; i--)
             {
-                float bottomCenter = NextCenter(topCenter);
-                float bottomWidth = NextWidth(topWidth);
+                AdvanceCorridor(topCenter, topWidth, out float bottomCenter, out float bottomWidth);
                 y -= segmentHeight;
 
                 segments[i].Root.transform.position = new Vector3(0f, y, 0f);
@@ -122,10 +125,7 @@ namespace Plummet
                 }
 
                 PathSegment lowest = FindLowestSegment();
-                float topCenter = lowest.BottomCenter;
-                float topWidth = lowest.BottomWidth;
-                float bottomCenter = NextCenter(topCenter);
-                float bottomWidth = NextWidth(topWidth);
+                AdvanceCorridor(lowest.BottomCenter, lowest.BottomWidth, out float bottomCenter, out float bottomWidth);
                 float y = lowest.Root.transform.position.y - segmentHeight;
 
                 segment.Root.transform.position = new Vector3(0f, y, 0f);
@@ -147,16 +147,78 @@ namespace Plummet
             return lowest;
         }
 
-        private float NextCenter(float current)
+        private void ResetCorridorState()
         {
-            return Mathf.Clamp(current + Random.Range(-centerStep, centerStep), -maximumCenterX, maximumCenterX);
+            for (int i = 0; i < stepHistory.Length; i++)
+            {
+                stepHistory[i] = 0;
+            }
+
+            stepHistoryIndex = 0;
         }
 
-        private float NextWidth(float current)
+        // Stepped zig-zag corridor, faithful to the original BackgroundLayer: the gap
+        // narrows with difficulty, and the walls jump left/right in discrete steps with
+        // forced turn-backs at the margins and anti-drift so they never wander one way.
+        private void AdvanceCorridor(float topCenter, float topWidth, out float bottomCenter, out float bottomWidth)
         {
             float difficultyT = GameManager.Instance != null ? GameManager.Instance.DifficultyT : 0f;
+
             float targetMinimum = Mathf.Lerp(startWidth, minimumWidth, difficultyT);
-            return Mathf.Clamp(current + Random.Range(-widthStep, widthStep), targetMinimum, maximumWidth);
+            bottomWidth = Mathf.Clamp(topWidth + Random.Range(-widthStep, widthStep), targetMinimum, maximumWidth);
+
+            float step = Mathf.Lerp(minStep, maxStep, difficultyT) * Random.Range(0.6f, 1f);
+            float limit = Mathf.Max(0f, playHalfWidth - bottomWidth * 0.5f);
+
+            int direction = ChooseDirection(topCenter, step, limit);
+            bottomCenter = Mathf.Clamp(topCenter + direction * step, -limit, limit);
+            RecordStep(direction);
+        }
+
+        private int ChooseDirection(float center, float step, float limit)
+        {
+            if (center + step > limit)
+            {
+                return -1;
+            }
+
+            if (center - step < -limit)
+            {
+                return 1;
+            }
+
+            bool onlyLeft = true;
+            bool onlyRight = true;
+            for (int i = 0; i < stepHistory.Length; i++)
+            {
+                if (stepHistory[i] >= 0)
+                {
+                    onlyLeft = false;
+                }
+
+                if (stepHistory[i] <= 0)
+                {
+                    onlyRight = false;
+                }
+            }
+
+            if (onlyLeft)
+            {
+                return 1;
+            }
+
+            if (onlyRight)
+            {
+                return -1;
+            }
+
+            return Random.value < 0.5f ? -1 : 1;
+        }
+
+        private void RecordStep(int direction)
+        {
+            stepHistory[stepHistoryIndex] = direction;
+            stepHistoryIndex = (stepHistoryIndex + 1) % stepHistory.Length;
         }
 
         private sealed class PathSegment

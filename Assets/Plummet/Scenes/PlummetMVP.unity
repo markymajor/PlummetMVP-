@@ -1479,9 +1479,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b3fc57d2f93024fa39cade176c7a11ad, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Plummet.GameManager
-  baseScrollSpeed: 3.25
-  maxScrollSpeed: 8.5
-  speedIncreasePerSecond: 0.045
+  baseScrollSpeed: 5.5
+  maxScrollSpeed: 12
+  speedIncreasePerSecond: 0.06
   player: {fileID: 1128727346}
   scoreManager: {fileID: 1857627776}
   uiManager: {fileID: 698297477}
@@ -6298,10 +6298,11 @@ MonoBehaviour:
   minimumWidth: 2.45
   maximumWidth: 4.75
   widthStep: 0.32
-  maximumCenterX: 1.05
-  centerStep: 0.45
+  minStep: 0.5
+  maxStep: 1
+  playHalfWidth: 2.65
   wallThickness: 0.82
-  wallColor: {r: 0.015, g: 0.19, b: 0.23, a: 1}
+  wallColor: {r: 0.008, g: 0.208, b: 0.282, a: 1}
 --- !u!4 &867093445
 Transform:
   m_ObjectHideFlags: 0
