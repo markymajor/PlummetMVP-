@@ -319,7 +319,8 @@ namespace PlummetEditor
             AddImage(startPanel.transform, "Start Great Wall", LoadGameSprite("start-great-wall.png"), Anchor(new Vector2(0.51f, 0.43f), new Vector2(1120f, 300f)));
             AddImage(startPanel.transform, "Start Red Building", LoadGameSprite("start-red-building.png"), Anchor(new Vector2(0.1f, 0.34f), new Vector2(320f, 375f)));
             AddImage(startPanel.transform, "Start Skyscraper", LoadGameSprite("start-skyscraper.png"), Anchor(new Vector2(0.94f, 0.48f), new Vector2(170f, 720f)));
-            AddImage(startPanel.transform, "Start Shaft Lower Details", LoadGameSprite("start-shaft-lower-details.png"), Anchor(new Vector2(0.5f, 0.145f), new Vector2(1080f, 430f)), false);
+            Image shaftDetails = AddImage(startPanel.transform, "Start Shaft Lower Details", LoadGameSprite("start-shaft-lower-details.png"), Anchor(new Vector2(0.5f, 0.145f), new Vector2(1080f, 430f)), false);
+            CreateShaftPolish(startPanel.transform, shaftDetails.rectTransform);
             AddImage(startPanel.transform, "Title", LoadGameSprite("Title.png"), Anchor(new Vector2(0.5f, 0.79f), new Vector2(850f, 215f)));
             AddText(startPanel.transform, "Tap Text", "TAP TO DROP", font, Anchor(new Vector2(0.5f, 0.665f), new Vector2(500f, 72f)), 42, TextAnchor.MiddleCenter).color = new Color(0.12f, 0.12f, 0.14f, 0.75f);
             RectTransform standingMark = AddImage(startPanel.transform, "Standing Mark", LoadGameSprite("mark.png"), Anchor(new Vector2(0.5f, 0.405f), new Vector2(130f, 300f))).rectTransform;
@@ -420,6 +421,55 @@ namespace PlummetEditor
 
             Image image = bar.GetComponent<Image>();
             image.color = Color.black;
+            image.raycastTarget = false;
+            return rect;
+        }
+
+        private static void CreateShaftPolish(Transform parent, RectTransform shaftDetails)
+        {
+            // Dark fill behind the shaft so no sky teal shows beside the bricks at the bottom.
+            RectTransform backdrop = CreateSolidBand(parent, "Shaft Side Backdrop", new Color(0.02f, 0.13f, 0.17f, 1f), 520f);
+            backdrop.SetSiblingIndex(shaftDetails.GetSiblingIndex());
+
+            // Tiled horizontal-brick course to add texture inside the shaft.
+            RectTransform bricks = CreateBrickCourse(parent, "Shaft Brick Course", LoadGameSprite("Brick-white.png"), new Color(0.09f, 0.21f, 0.26f, 1f));
+            bricks.SetSiblingIndex(shaftDetails.GetSiblingIndex());
+        }
+
+        private static RectTransform CreateSolidBand(Transform parent, string name, Color color, float height)
+        {
+            GameObject band = new GameObject(name, typeof(RectTransform), typeof(Image));
+            band.transform.SetParent(parent, false);
+
+            RectTransform rect = band.GetComponent<RectTransform>();
+            rect.anchorMin = new Vector2(0f, 0f);
+            rect.anchorMax = new Vector2(1f, 0f);
+            rect.pivot = new Vector2(0.5f, 0f);
+            rect.sizeDelta = new Vector2(0f, height);
+            rect.anchoredPosition = Vector2.zero;
+
+            Image image = band.GetComponent<Image>();
+            image.color = color;
+            image.raycastTarget = false;
+            return rect;
+        }
+
+        private static RectTransform CreateBrickCourse(Transform parent, string name, Sprite sprite, Color color)
+        {
+            GameObject bricks = new GameObject(name, typeof(RectTransform), typeof(Image));
+            bricks.transform.SetParent(parent, false);
+
+            RectTransform rect = bricks.GetComponent<RectTransform>();
+            rect.anchorMin = new Vector2(0.5f, 0.145f);
+            rect.anchorMax = new Vector2(0.5f, 0.145f);
+            rect.pivot = new Vector2(0.5f, 0.5f);
+            rect.sizeDelta = new Vector2(1080f, 430f);
+            rect.anchoredPosition = Vector2.zero;
+
+            Image image = bricks.GetComponent<Image>();
+            image.sprite = sprite;
+            image.type = Image.Type.Tiled;
+            image.color = color;
             image.raycastTarget = false;
             return rect;
         }
