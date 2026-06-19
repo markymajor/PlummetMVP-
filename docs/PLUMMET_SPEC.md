@@ -103,33 +103,37 @@ Recovered art (HD/@2x) in the original zip: `Initial01–03`,
 zig-zag, distance score) and modernize the implementation (New Input System,
 pooling, real colliders, multi-input, proper aspect handling, tunable values).
 
-- **Phase 0 — Foundation (this commit)**
-  - Spec doc (this file).
-  - Import recovered decorative wall art (`Briks_02–06`, `Window-Background`,
+- **Phase 0 — Foundation** ✅ done
+  - [x] Spec doc (this file).
+  - [x] Import recovered decorative wall art (`Briks_02–06`, `Window-Background`,
     `Bricks-background_01–03`).
-  - Exact original colors in the shaft.
-  - Difficulty values retuned to the original's character.
-  - Fix build settings to ship `PlummetMVP.unity`.
+  - [x] Exact original colors in the shaft (`#023548`).
+  - [x] Difficulty values retuned to the original's character.
+  - [x] Fix build settings to ship `PlummetMVP.unity`.
 
-- **Phase 1 — Faithful corridor**
-  - Rework `PathManager` generation to the stepped zig-zag (gap width + stepped
-    `xLeft`, anti-drift, narrowing over time).
-  - Decorate walls: tiled edge bricks + random rubble/window decals.
-  - Parallax brick background behind the corridor.
+- **Phase 1 — Faithful corridor** ✅ done
+  - [x] Rework `PathManager` generation to the stepped zig-zag (gap width +
+    stepped jumps, anti-drift, narrowing over time).
+  - [ ] Decorate walls with random rubble/window decals (`Briks_*`, `Window`)
+    — *art-ready, deferred to local tuning.*
+  - [ ] Parallax brick background behind the corridor — *deferred to local.*
 
-- **Phase 2 — Faithful feel**
-  - Retune tilt steering to the original (smoothed, edge-clamped); keep drag +
-    keyboard for desktop/testing.
-  - Standing→falling pose morph integrated with the trapdoor intro.
+- **Phase 2 — Faithful feel** 🔧 in progress
+  - [x] Solid shaft walls that fill to the screen edge (thick walls; inner
+    collision face unchanged). Also fixes the "dark part beside the bricks"
+    note in gameplay.
+  - [ ] Retune tilt steering to the original (smoothed, edge-clamped); keep drag
+    + keyboard for desktop/testing — *needs a device to feel; do locally.*
+  - [ ] Standing→falling pose morph — *blocked: Mark art has no Initial02/03
+    poses; the trapdoor intro already covers the standing→falling handoff.*
 
 - **Phase 3 — Cleanup**
-  - Remove the non-original obstacle system from the shipped scene
-    (`ObstacleSpawner` + obstacle prefabs) — keep generic pooling if reused.
-  - Remove dead band-aid tooling and the unused `SampleScene` once the builder
-    is the single source of scene truth.
+  - [ ] ~~Remove obstacles~~ — **kept** per design decision (modern addition).
+  - [ ] Remove the unused `SampleScene` and dead band-aid tooling once the
+    generator is the single source of scene truth.
 
-> Phases 1–3 touch runtime feel and are best landed with the local Unity test
-> loop (play-test + screenshot) rather than blind. Phase 0 is safe to land now.
+> Items marked "local" touch runtime feel/visuals and are best landed with the
+> Unity play-test loop (play + screenshot) rather than blind from the repo.
 
 ---
 

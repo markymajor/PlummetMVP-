@@ -17,7 +17,9 @@ namespace Plummet
         [SerializeField] private float minStep = 0.5f;
         [SerializeField] private float maxStep = 1.0f;
         [SerializeField] private float playHalfWidth = 2.65f;
-        [SerializeField] private float wallThickness = 0.78f;
+        // Walls fill outward from the corridor edge well past the screen edge so the
+        // dark shaft is solid to the sides (the inner collision face is unchanged).
+        [SerializeField] private float wallThickness = 4.5f;
         [SerializeField] private Color wallColor = new Color(0.008f, 0.208f, 0.282f, 1f);
 
         private readonly List<PathSegment> segments = new List<PathSegment>();

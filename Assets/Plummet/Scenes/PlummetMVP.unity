@@ -6301,7 +6301,7 @@ MonoBehaviour:
   minStep: 0.5
   maxStep: 1
   playHalfWidth: 2.65
-  wallThickness: 0.82
+  wallThickness: 4.5
   wallColor: {r: 0.008, g: 0.208, b: 0.282, a: 1}
 --- !u!4 &867093445
 Transform:

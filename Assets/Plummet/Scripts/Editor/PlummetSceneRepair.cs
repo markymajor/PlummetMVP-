@@ -322,7 +322,7 @@ namespace PlummetEditor
             SetFloat(pathManager, "maxStep", 1.0f);
             SetFloat(pathManager, "playHalfWidth", 2.65f);
             SetFloat(pathManager, "widthStep", 0.32f);
-            SetFloat(pathManager, "wallThickness", 0.82f);
+            SetFloat(pathManager, "wallThickness", 4.5f);
             SetColor(pathManager, "wallColor", new Color(0.008f, 0.208f, 0.282f, 1f));
             pathManager.ResetPath();
             return pathManager;
