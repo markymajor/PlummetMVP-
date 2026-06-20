@@ -129,7 +129,7 @@ namespace Plummet
                 float y = lowest.Root.transform.position.y - segmentHeight;
 
                 segment.Root.transform.position = new Vector3(0f, y, 0f);
-                segment.Configure(bottomCenter, bottomWidth, topCenter, topWidth, segmentHeight, wallThickness, wallSprite, wallColor);
+                segment.Configure(bottomCenter, bottomWidth, lowest.BottomCenter, lowest.BottomWidth, segmentHeight, wallThickness, wallSprite, wallColor);
             }
         }
 

@@ -308,7 +308,7 @@ namespace PlummetEditor
             eventSystem.AddComponent<StandaloneInputModule>();
 #endif
 
-            Font font = Resources.GetBuiltinResource<Font>("Arial.ttf");
+            Font font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
             Transform uiRoot = CreatePortraitUiRoot(canvasObject.transform).transform;
 
             GameObject startPanel = CreatePanel("Start Panel", uiRoot);

@@ -151,7 +151,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c8ffb6fd3a2c146f8a823dc77261970a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Plummet.Scroller
-  speedMultiplier: 0.9187496
+  speedMultiplier: 1.0021445
   loop: 0
   loopHeight: 15
   recycleY: 7.4
