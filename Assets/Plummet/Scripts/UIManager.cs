@@ -5,6 +5,8 @@ namespace Plummet
 {
     public sealed class UIManager : MonoBehaviour
     {
+        private const string OpeningInstructionsSeenKey = "PlummetOpeningInstructionsSeen";
+
         [SerializeField] private GameObject startPanel;
         [SerializeField] private GameObject instructionDistancePanel;
         [SerializeField] private GameObject instructionSpeedPanel;
@@ -23,11 +25,12 @@ namespace Plummet
         [SerializeField] private Button shareButton;
         [SerializeField] private IntroTransition introTransition;
 
-        private bool shouldShowOpeningInstructions = true;
+        private bool shouldShowOpeningInstructions;
         private bool showingOpeningInstructions;
 
         private void Awake()
         {
+            shouldShowOpeningInstructions = PlayerPrefs.GetInt(OpeningInstructionsSeenKey, 0) == 0;
             EnsurePanelsUsePortraitFrame();
             WireButton(playButton, OnPlayPressed);
             WireButton(distanceNextButton, OnDistanceNextPressed);
@@ -147,6 +150,7 @@ namespace Plummet
             if (showingOpeningInstructions)
             {
                 showingOpeningInstructions = false;
+                MarkOpeningInstructionsSeen();
                 ShowStart();
                 return;
             }
@@ -207,6 +211,12 @@ namespace Plummet
         private bool HasInstructionPanels()
         {
             return instructionDistancePanel != null && instructionSpeedPanel != null;
+        }
+
+        private static void MarkOpeningInstructionsSeen()
+        {
+            PlayerPrefs.SetInt(OpeningInstructionsSeenKey, 1);
+            PlayerPrefs.Save();
         }
 
         private void EnsurePanelsUsePortraitFrame()

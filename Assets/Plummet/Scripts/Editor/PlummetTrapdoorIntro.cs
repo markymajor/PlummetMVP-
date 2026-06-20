@@ -16,7 +16,7 @@ namespace PlummetEditor
         private const float HalfWidth = 180f;
         private const float DoorHeight = 70f;
 
-        [MenuItem("Plummet/Add Trapdoor Intro To Scene")]
+        [MenuItem("Plummet/Legacy/Add Trapdoor Intro To Scene", priority = 130)]
         public static void AddTrapdoorIntro()
         {
             UIManager uiManager = Object.FindFirstObjectByType<UIManager>();

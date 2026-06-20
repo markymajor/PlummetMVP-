@@ -16,7 +16,7 @@ namespace PlummetEditor
         private const string BackdropName = "Shaft Side Backdrop";
         private const string BrickCourseName = "Shaft Brick Course";
 
-        [MenuItem("Plummet/Polish Start Shaft")]
+        [MenuItem("Plummet/Legacy/Polish Start Shaft", priority = 140)]
         public static void PolishStartShaft()
         {
             Transform startPanel = FindDeep(null, "Start Panel");

@@ -15,9 +15,55 @@ namespace PlummetEditor
     {
         private const string GamePath = "Assets/Plummet/Sprites/Game/";
         private const string UiPath = "Assets/Plummet/Sprites/UI/";
+        private const string ScenePath = "Assets/Plummet/Scenes/PlummetMVP.unity";
 
-        [MenuItem("Plummet/Repair Open Scene")]
-        public static void RepairOpenScene()
+        [MenuItem("Plummet/Build Latest Playable", priority = 0)]
+        public static void BuildLatestPlayable()
+        {
+            if (!OpenPlummetScene())
+            {
+                return;
+            }
+
+            RepairLoadedScene();
+        }
+
+        [MenuItem("Plummet/Legacy/Repair Current Scene", priority = 100)]
+        public static void RepairCurrentScene()
+        {
+            if (EditorSceneManager.GetActiveScene().path != ScenePath)
+            {
+                Debug.LogError($"Repair Current Scene refused to run outside {ScenePath}. Open the Plummet scene or use Plummet > Build Latest Playable.");
+                return;
+            }
+
+            RepairLoadedScene();
+        }
+
+        private static bool OpenPlummetScene()
+        {
+            if (EditorSceneManager.GetActiveScene().path == ScenePath)
+            {
+                return true;
+            }
+
+            if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
+            {
+                Debug.Log("Build Latest Playable cancelled before switching scenes.");
+                return false;
+            }
+
+            if (!File.Exists(ScenePath))
+            {
+                Debug.LogError($"Build Latest Playable could not find {ScenePath}. Run Legacy > Build MVP Scene only if the scene file has been deleted.");
+                return false;
+            }
+
+            EditorSceneManager.OpenScene(ScenePath);
+            return true;
+        }
+
+        private static void RepairLoadedScene()
         {
             AssetDatabase.Refresh();
             ConfigureSprites();

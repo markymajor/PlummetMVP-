@@ -8,7 +8,7 @@ This folder is a first playable Unity 2D mobile MVP built from the recovered Plu
 - `Assets/Plummet/Sprites/UI/` - game-over art and buttons.
 - `Assets/Plummet/Sprites/Icons/` - app icon destination folder.
 - `Assets/Plummet/Scripts/` - runtime C# scripts.
-- `Assets/Plummet/Scripts/Editor/` - scene builder menu item.
+- `Assets/Plummet/Scripts/Editor/` - build/repair menu tooling.
 - `Assets/Plummet/Prefabs/` - generated obstacle prefabs.
 - `Assets/Plummet/Scenes/` - generated `PlummetMVP.unity` scene.
 
@@ -17,11 +17,11 @@ This folder is a first playable Unity 2D mobile MVP built from the recovered Plu
 1. Create or open a Unity 2D project.
 2. Copy the `Assets/Plummet` folder into the project's `Assets` folder.
 3. Wait for Unity to import the sprites and scripts.
-4. In Unity, choose `Plummet > Build MVP Scene`.
-5. Open `Assets/Plummet/Scenes/PlummetMVP.unity`.
+4. Open `Assets/Plummet/Scenes/PlummetMVP.unity`.
+5. In Unity, choose `Plummet > Build Latest Playable`.
 6. Press Play.
 
-The builder imports PNGs as sprites, creates the camera, player, walls, scrolling background, obstacle pool, UI canvas, buttons, and scene references.
+The latest playable command imports PNGs as sprites, repairs the camera, player, walls, scrolling background, obstacle pool, UI canvas, buttons, and scene references.
 
 ## Editor Testing
 
@@ -35,7 +35,7 @@ The builder imports PNGs as sprites, creates the camera, player, walls, scrollin
 ## Mobile Testing
 
 1. Open `File > Build Settings`.
-2. Add `PlummetMVP.unity` to Scenes In Build.
+2. Confirm `Assets/Plummet/Scenes/PlummetMVP.unity` is in Scenes In Build.
 3. Switch platform to iOS or Android.
 4. Set orientation to portrait in Player Settings.
 5. Build and run on a phone.
@@ -54,3 +54,4 @@ On device, tilt left/right to steer. Touch input remains available as a fallback
 - Difficulty increases by raising scroll speed and reducing spawn intervals.
 - High score is stored locally with `PlayerPrefs`.
 - The share button is a placeholder for native sharing later.
+- Use `docs/ACCEPTANCE_CHECKLIST.md` before pushing a "latest playable" change.

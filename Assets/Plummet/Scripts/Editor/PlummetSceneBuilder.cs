@@ -19,7 +19,7 @@ namespace PlummetEditor
         private const string PrefabPath = "Assets/Plummet/Prefabs/";
         private const string ScenePath = "Assets/Plummet/Scenes/PlummetMVP.unity";
 
-        [MenuItem("Plummet/Build MVP Scene")]
+        [MenuItem("Plummet/Legacy/Build MVP Scene From Scratch", priority = 120)]
         public static void BuildScene()
         {
             EnsureFolders();
