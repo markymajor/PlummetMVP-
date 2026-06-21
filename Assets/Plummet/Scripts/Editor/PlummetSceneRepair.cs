@@ -70,14 +70,14 @@ namespace PlummetEditor
             }
 
             GameObject startPanel = CreatePanel(uiRoot, "Start Panel");
-            AddImage(startPanel.transform, "Menu Background", LoadGameSprite("main-menu-background_2014-12-19_adjusted.png"), Stretch(), false);
+            AddImage(startPanel.transform, "Menu Background", LoadGameSprite("main-menu-background_2014-12-19_adjusted.png"), Stretch(), true);
             AddImage(startPanel.transform, "Sky Cloud 1", LoadGameSprite("Cloud1.png"), Anchor(0.18f, 0.88f, 420f, 86f));
             AddImage(startPanel.transform, "Sky Cloud 2", LoadGameSprite("Cloud2.png"), Anchor(0.76f, 0.84f, 330f, 74f));
             AddImage(startPanel.transform, "Sky Cloud 3", LoadGameSprite("Cloud3.png"), Anchor(0.45f, 0.75f, 320f, 44f));
             AddImage(startPanel.transform, "Start Great Wall", LoadGameSprite("start-great-wall.png"), Anchor(0.51f, 0.43f, 1120f, 300f));
             AddImage(startPanel.transform, "Start Red Building", LoadGameSprite("start-red-building.png"), Anchor(0.1f, 0.34f, 320f, 375f));
             AddImage(startPanel.transform, "Start Skyscraper", LoadGameSprite("start-skyscraper.png"), Anchor(0.94f, 0.48f, 170f, 720f));
-            AddImage(startPanel.transform, "Start Shaft Lower Details", LoadGameSprite("start-shaft-lower-details.png"), Anchor(0.5f, 0.145f, 1080f, 430f), false);
+            AddImage(startPanel.transform, "Start Shaft Lower Details", LoadGameSprite("start-shaft-lower-details.png"), Anchor(0.5f, 0.145f, 1080f, 430f), true);
             AddImage(startPanel.transform, "Title", LoadGameSprite("Title.png"), Anchor(0.5f, 0.79f, 850f, 215f));
             AddText(startPanel.transform, "Tap Text", "TAP TO DROP", Anchor(0.5f, 0.665f, 500f, 72f), 42, TextAnchor.MiddleCenter, new Color(0.12f, 0.12f, 0.14f, 0.75f));
             AddImage(startPanel.transform, "Standing Mark", LoadGameSprite("mark.png"), Anchor(0.5f, 0.405f, 130f, 300f));
