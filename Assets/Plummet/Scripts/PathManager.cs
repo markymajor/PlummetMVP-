@@ -166,6 +166,16 @@ namespace Plummet
         // forced turn-backs at the margins and anti-drift so they never wander one way.
         private void AdvanceCorridor(float topCenter, float topWidth, out float bottomCenter, out float bottomWidth)
         {
+            // During the run's grace window keep the corridor centered and wide so the
+            // drop lands fair; normal wandering/narrowing resumes once grace ends.
+            if (GameManager.Instance != null && GameManager.Instance.InGrace)
+            {
+                bottomWidth = maximumWidth;
+                bottomCenter = 0f;
+                RecordStep(0);
+                return;
+            }
+
             float difficultyT = GameManager.Instance != null ? GameManager.Instance.DifficultyT : 0f;
 
             float targetMinimum = Mathf.Lerp(startWidth, minimumWidth, difficultyT);

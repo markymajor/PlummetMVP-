@@ -26,6 +26,12 @@ namespace Plummet
                 return;
             }
 
+            // Hold obstacles off during the start-of-run grace window.
+            if (GameManager.Instance.InGrace)
+            {
+                return;
+            }
+
             elapsed += Time.deltaTime;
             timer -= Time.deltaTime;
 

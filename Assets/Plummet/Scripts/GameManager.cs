@@ -23,6 +23,8 @@ namespace Plummet
         [SerializeField] private float speedIncreasePerSecond = 0.06f;
         [Tooltip("Gentle scroll speed used on the home/attract screen so the shaft is alive behind the menu before the run begins.")]
         [SerializeField] private float attractScrollSpeed = 2.5f;
+        [Tooltip("Brief forgiving window at the start of each run: the corridor stays centered and wide, difficulty doesn't ramp, and no obstacles spawn, so the trapdoor drop never lands straight into a hazard.")]
+        [SerializeField] private float graceDuration = 1.2f;
 
         [Header("Scene References")]
         [SerializeField] private PlayerController player;
@@ -45,6 +47,13 @@ namespace Plummet
         /// world with no visual jump.
         /// </summary>
         public bool IsScrolling => State == GameState.Start || State == GameState.Playing;
+
+        /// <summary>
+        /// True during the brief grace window at the start of a run. While true the
+        /// corridor stays centered and wide and obstacles hold off, giving a fair
+        /// landing before difficulty and hazards kick in.
+        /// </summary>
+        public bool InGrace => State == GameState.Playing && runTime < graceDuration;
 
         /// <summary>
         /// Difficulty progress in the 0..1 range, derived from the current scroll speed.
@@ -120,7 +129,9 @@ namespace Plummet
             }
 
             runTime += Time.deltaTime;
-            ScrollSpeed = Mathf.Min(maxScrollSpeed, baseScrollSpeed + runTime * speedIncreasePerSecond);
+            // Hold difficulty flat during the grace window, then ramp.
+            float rampTime = Mathf.Max(0f, runTime - graceDuration);
+            ScrollSpeed = Mathf.Min(maxScrollSpeed, baseScrollSpeed + rampTime * speedIncreasePerSecond);
         }
 
         public void StartRun()
