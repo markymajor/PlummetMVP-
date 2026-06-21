@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace Plummet
 {
@@ -20,18 +21,20 @@ namespace Plummet
 
         [Header("Falling Actor")]
         [SerializeField] private RectTransform fallingActor;
-        // The standing actor sits on the gameplay player's pinned position, so the
-        // drop only needs a short dip through the doors before the run takes over;
-        // the continuously-scrolling shaft sells the rest of the fall. Keeping the
-        // dip small keeps the hand-off to the pinned player free of a visible jump.
-        [SerializeField] private float fallDistance = 160f;
-        [SerializeField] private float fallDuration = 0.42f;
-        [SerializeField] private float fallSpin = 40f;
+        [Tooltip("Falling-pose sprite swapped in when the drop starts so the actor matches the gameplay player's frame (same pose and size) for a pop-free hand-off.")]
+        [SerializeField] private Sprite fallingSprite;
+        // Mark falls straight down from the surface ledge through the trapdoor and into
+        // the shaft; fallDistance carries his centre to the gameplay player's pinned
+        // position, where the run takes over (handoffFraction 1 = at the bottom of the
+        // fall). The actor is sized to the world player, so there is no size jump.
+        [SerializeField] private float fallDistance = 500f;
+        [SerializeField] private float fallDuration = 0.6f;
+        [SerializeField] private float fallSpin = 0f;
 
         [Header("Timing")]
         [SerializeField] private float holdAfterOpen = 0.05f;
-        [Tooltip("Fraction of the fall (0..1) at which the gameplay run takes over. The pinned player appears at the actor's start, so hand off early while the dip is small to avoid a visible jump.")]
-        [SerializeField] private float handoffFraction = 0.5f;
+        [Tooltip("Fraction of the fall (0..1) at which the gameplay run takes over. 1 = hand off at the bottom, where the falling actor has reached the gameplay player's position, so the swap is seamless.")]
+        [SerializeField] private float handoffFraction = 1f;
 
         [Header("Optional")]
         [Tooltip("Faded to zero while the doors open (e.g. a group holding the title/tap prompt). Optional.")]
@@ -43,6 +46,8 @@ namespace Plummet
         private float actorHomeZ;
         private bool capturedDefaults;
         private Coroutine routine;
+        private Image actorImage;
+        private Sprite standingSprite;
 
         public bool IsPlaying { get; private set; }
 
@@ -60,6 +65,11 @@ namespace Plummet
             }
 
             CaptureDefaults();
+            if (actorImage != null)
+            {
+                standingSprite = actorImage.sprite;
+            }
+
             routine = StartCoroutine(Run(onComplete));
         }
 
@@ -81,6 +91,13 @@ namespace Plummet
             {
                 fallingActor.anchoredPosition = actorHomePosition;
                 fallingActor.localRotation = Quaternion.Euler(0f, 0f, actorHomeZ);
+            }
+
+            // Restore the standing pose only if we're resetting mid/after a drop, so a
+            // live skin pick (which sets the sprite directly) is never overridden.
+            if (actorImage != null && standingSprite != null && actorImage.sprite == fallingSprite)
+            {
+                actorImage.sprite = standingSprite;
             }
 
             if (promptGroup != null)
@@ -110,6 +127,7 @@ namespace Plummet
             {
                 actorHomePosition = fallingActor.anchoredPosition;
                 actorHomeZ = fallingActor.localEulerAngles.z;
+                actorImage = fallingActor.GetComponent<Image>();
             }
 
             capturedDefaults = true;
@@ -145,7 +163,14 @@ namespace Plummet
                 yield return new WaitForSeconds(holdAfterOpen);
             }
 
-            // 2. Drop the character through the gap, accelerating like gravity.
+            // Swap to the falling pose so the actor matches the gameplay player's frame
+            // (same pose and size) — the hand-off then has no pose or size pop.
+            if (actorImage != null && fallingSprite != null)
+            {
+                actorImage.sprite = fallingSprite;
+            }
+
+            // 2. Drop the character straight down through the gap, accelerating like gravity.
             duration = Mathf.Max(0.0001f, fallDuration);
             for (float t = 0f; t < duration; t += Time.deltaTime)
             {

@@ -65,11 +65,22 @@ namespace PlummetEditor
             introSo.FindProperty("leftDoor").objectReferenceValue = leftDoor;
             introSo.FindProperty("rightDoor").objectReferenceValue = rightDoor;
             introSo.FindProperty("fallingActor").objectReferenceValue = markRect;
-            // Tuned for the seamless drop: a short dip through the doors handed off
-            // early to the pinned gameplay player on the continuously-scrolling shaft.
-            introSo.FindProperty("fallDistance").floatValue = 160f;
-            introSo.FindProperty("fallDuration").floatValue = 0.42f;
-            introSo.FindProperty("handoffFraction").floatValue = 0.5f;
+            // Faithful drop: Mark falls straight down (no spin) from the ledge through
+            // the trapdoor and into the shaft, handing off to the pinned gameplay player
+            // only once he reaches the run's position - so steering takes over after the
+            // fall, not during it. fallDistance carries his centre from the standing
+            // ledge position down to the gameplay player's pinned screen position.
+            introSo.FindProperty("fallDistance").floatValue = 500f;
+            introSo.FindProperty("fallDuration").floatValue = 0.6f;
+            introSo.FindProperty("handoffFraction").floatValue = 1f;
+            introSo.FindProperty("fallSpin").floatValue = 0f;
+            // Falling-pose sprite = the world player's first falling frame, so the actor
+            // matches the gameplay player (same pose and size) at hand-off.
+            Sprite fallingSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Plummet/Sprites/Game/mark-falling-flail-01.png");
+            if (fallingSprite != null)
+            {
+                introSo.FindProperty("fallingSprite").objectReferenceValue = fallingSprite;
+            }
             introSo.ApplyModifiedPropertiesWithoutUndo();
 
             SerializedObject uiSo = new SerializedObject(uiManager);

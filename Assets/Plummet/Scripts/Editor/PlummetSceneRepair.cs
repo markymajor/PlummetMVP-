@@ -92,8 +92,10 @@ namespace PlummetEditor
 
             AddImage(startPanel.transform, "Title", LoadGameSprite("Title.png"), Anchor(0.5f, 0.9f, 720f, 182f));
             AddText(startPanel.transform, "Tap Text", "TAP TO DROP", Anchor(0.5f, 0.8f, 500f, 70f), 40, TextAnchor.MiddleCenter, new Color(0.12f, 0.13f, 0.16f, 0.85f));
-            // Mark stands on the ground line; Part 3 sizes him to match the world player.
-            Image standingMark = AddImage(startPanel.transform, "Standing Mark", LoadGameSprite("mark.png"), Anchor(0.5f, groundLine + 0.086f, 150f, 330f));
+            // Standing Mark is sized to the world player's on-screen footprint (~514px
+            // square) so there is no size pop when the drop hands off to the run. The
+            // 514-tall box places mark.png's feet on the ground line (centre +0.134).
+            Image standingMark = AddImage(startPanel.transform, "Standing Mark", LoadGameSprite("mark.png"), Anchor(0.5f, groundLine + 0.134f, 514f, 514f));
             Button playButton = AddTextButton(startPanel.transform, "Play Button", string.Empty, Stretch());
 
             GameObject instructionDistancePanel = CreatePanel(uiRoot, "Instruction Distance Panel");
