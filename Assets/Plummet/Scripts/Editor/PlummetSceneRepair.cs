@@ -69,17 +69,31 @@ namespace PlummetEditor
                 uiManager = canvas.gameObject.AddComponent<UIManager>();
             }
 
-            // The Start Panel is transparent so the live, scrolling PathManager shaft
-            // (rendered by the camera behind the overlay canvas) shows through: the home
-            // screen and gameplay show the same corridor. Only the title, tap prompt,
-            // standing character and trapdoor doors live on the panel; the static menu
-            // background, skyline and shaft art were removed in favour of the real shaft.
+            // Original 2014 composition, modernized: the surface (sky, skyline, ledge)
+            // fills the top of the screen as the land Mark stands on, and the real
+            // scrolling shaft (rendered by the camera) shows through the transparent
+            // lower half, descending below the ground. groundLine is the surface height
+            // where Mark stands and the trapdoor opens.
+            const float groundLine = 0.60f;
             GameObject startPanel = CreatePanel(uiRoot, "Start Panel");
-            AddImage(startPanel.transform, "Title", LoadGameSprite("Title.png"), Anchor(0.5f, 0.79f, 850f, 215f));
-            AddText(startPanel.transform, "Tap Text", "TAP TO DROP", Anchor(0.5f, 0.665f, 500f, 72f), 42, TextAnchor.MiddleCenter, new Color(1f, 1f, 1f, 0.92f));
-            // Stand the character on the gameplay player's pinned screen position
-            // (~0.47 height) so the trapdoor drop hands off to the run with no jump.
-            Image standingMark = AddImage(startPanel.transform, "Standing Mark", LoadGameSprite("mark.png"), Anchor(0.5f, 0.47f, 130f, 300f));
+
+            // Opaque surface backdrop + skyline above the ground (hides the shaft here).
+            AddImage(startPanel.transform, "Surface Sky", LoadGameSprite("main-menu-background_2014-12-19_adjusted.png"), Region(0f, groundLine - 0.03f, 1f, 1f), false);
+            AddImage(startPanel.transform, "Sky Cloud 1", LoadGameSprite("Cloud1.png"), Anchor(0.2f, 0.9f, 360f, 74f));
+            AddImage(startPanel.transform, "Sky Cloud 2", LoadGameSprite("Cloud2.png"), Anchor(0.79f, 0.86f, 300f, 66f));
+            AddImage(startPanel.transform, "Start Skyscraper", LoadGameSprite("start-skyscraper.png"), Anchor(0.9f, groundLine + 0.17f, 170f, 720f));
+            AddImage(startPanel.transform, "Start Red Building", LoadGameSprite("start-red-building.png"), Anchor(0.12f, groundLine + 0.085f, 320f, 375f));
+            AddImage(startPanel.transform, "Start Great Wall", LoadGameSprite("start-great-wall.png"), Anchor(0.5f, groundLine + 0.06f, 1120f, 300f));
+
+            // Ground ledge either side of the centre trapdoor (the trapdoor itself is
+            // built by Plummet/Add Trapdoor Intro). Below the ledge the shaft descends.
+            AddGroundLedge(startPanel.transform, "Ground Ledge Left", 0f, 0.32f, groundLine);
+            AddGroundLedge(startPanel.transform, "Ground Ledge Right", 0.68f, 1f, groundLine);
+
+            AddImage(startPanel.transform, "Title", LoadGameSprite("Title.png"), Anchor(0.5f, 0.9f, 720f, 182f));
+            AddText(startPanel.transform, "Tap Text", "TAP TO DROP", Anchor(0.5f, 0.8f, 500f, 70f), 40, TextAnchor.MiddleCenter, new Color(0.12f, 0.13f, 0.16f, 0.85f));
+            // Mark stands on the ground line; Part 3 sizes him to match the world player.
+            Image standingMark = AddImage(startPanel.transform, "Standing Mark", LoadGameSprite("mark.png"), Anchor(0.5f, groundLine + 0.086f, 150f, 330f));
             Button playButton = AddTextButton(startPanel.transform, "Play Button", string.Empty, Stretch());
 
             GameObject instructionDistancePanel = CreatePanel(uiRoot, "Instruction Distance Panel");
@@ -640,6 +654,44 @@ namespace PlummetEditor
         private static RectSpec Anchor(float x, float y, float width, float height)
         {
             return new RectSpec(new Vector2(x, y), new Vector2(x, y), new Vector2(width, height), Vector2.zero, new Vector2(0.5f, 0.5f));
+        }
+
+        // A rect that fills a normalized region of the parent (anchorMin..anchorMax).
+        private static RectSpec Region(float minX, float minY, float maxX, float maxY)
+        {
+            return new RectSpec(new Vector2(minX, minY), new Vector2(maxX, maxY), Vector2.zero, Vector2.zero, new Vector2(0.5f, 0.5f));
+        }
+
+        // Builds a solid ground ledge band whose top sits at groundLine, spanning the
+        // normalized x range. Same lit-top-over-dark-face look as the centre trapdoor so
+        // the surface reads as one continuous ledge with the trapdoor in the middle.
+        private static void AddGroundLedge(Transform parent, string name, float xMin, float xMax, float groundLine)
+        {
+            const float bandHeight = 0.06f;
+            GameObject ledge = new GameObject(name, typeof(RectTransform), typeof(Image));
+            ledge.transform.SetParent(parent, false);
+            ApplyRect(ledge.GetComponent<RectTransform>(), new RectSpec(new Vector2(xMin, groundLine - bandHeight), new Vector2(xMax, groundLine), Vector2.zero, Vector2.zero, new Vector2(0.5f, 0.5f)));
+            Image face = ledge.GetComponent<Image>();
+            face.color = new Color(0.30f, 0.33f, 0.36f, 1f);
+            face.raycastTarget = false;
+
+            AddLedgeStrip(ledge.transform, "Top Surface", new Color(0.55f, 0.57f, 0.59f, 1f), 26f);
+            AddLedgeStrip(ledge.transform, "Top Edge", new Color(0.73f, 0.75f, 0.77f, 1f), 7f);
+        }
+
+        private static void AddLedgeStrip(Transform parent, string name, Color color, float height)
+        {
+            GameObject strip = new GameObject(name, typeof(RectTransform), typeof(Image));
+            strip.transform.SetParent(parent, false);
+            RectTransform rect = strip.GetComponent<RectTransform>();
+            rect.anchorMin = new Vector2(0f, 1f);
+            rect.anchorMax = new Vector2(1f, 1f);
+            rect.pivot = new Vector2(0.5f, 1f);
+            rect.sizeDelta = new Vector2(0f, height);
+            rect.anchoredPosition = Vector2.zero;
+            Image image = strip.GetComponent<Image>();
+            image.color = color;
+            image.raycastTarget = false;
         }
 
         private static void ApplyRect(RectTransform rectTransform, RectSpec spec)

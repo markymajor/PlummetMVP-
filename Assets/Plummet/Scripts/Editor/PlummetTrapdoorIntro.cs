@@ -87,8 +87,10 @@ namespace PlummetEditor
             GameObject container = new GameObject("Trapdoor", typeof(RectTransform));
             container.transform.SetParent(parent, false);
             RectTransform rect = container.GetComponent<RectTransform>();
-            rect.anchorMin = new Vector2(0.5f, 0.37f);
-            rect.anchorMax = new Vector2(0.5f, 0.37f);
+            // Centre trapdoor sits in the ground line (~0.60); its top aligns with the
+            // side ground ledges so the surface reads as one continuous ledge.
+            rect.anchorMin = new Vector2(0.5f, 0.579f);
+            rect.anchorMax = new Vector2(0.5f, 0.579f);
             rect.pivot = new Vector2(0.5f, 0.5f);
             rect.sizeDelta = new Vector2(HalfWidth * 2f, DoorHeight);
             rect.anchoredPosition = Vector2.zero;
