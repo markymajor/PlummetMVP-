@@ -59,6 +59,11 @@ namespace PlummetEditor
             introSo.FindProperty("leftDoor").objectReferenceValue = leftDoor;
             introSo.FindProperty("rightDoor").objectReferenceValue = rightDoor;
             introSo.FindProperty("fallingActor").objectReferenceValue = markRect;
+            // Tuned for the seamless drop: a short dip through the doors handed off
+            // early to the pinned gameplay player on the continuously-scrolling shaft.
+            introSo.FindProperty("fallDistance").floatValue = 160f;
+            introSo.FindProperty("fallDuration").floatValue = 0.42f;
+            introSo.FindProperty("handoffFraction").floatValue = 0.5f;
             introSo.ApplyModifiedPropertiesWithoutUndo();
 
             SerializedObject uiSo = new SerializedObject(uiManager);
@@ -76,8 +81,8 @@ namespace PlummetEditor
             GameObject container = new GameObject("Trapdoor", typeof(RectTransform));
             container.transform.SetParent(parent, false);
             RectTransform rect = container.GetComponent<RectTransform>();
-            rect.anchorMin = new Vector2(0.5f, 0.345f);
-            rect.anchorMax = new Vector2(0.5f, 0.345f);
+            rect.anchorMin = new Vector2(0.5f, 0.40f);
+            rect.anchorMax = new Vector2(0.5f, 0.40f);
             rect.pivot = new Vector2(0.5f, 0.5f);
             rect.sizeDelta = new Vector2(HalfWidth * 2f, DoorHeight);
             rect.anchoredPosition = Vector2.zero;

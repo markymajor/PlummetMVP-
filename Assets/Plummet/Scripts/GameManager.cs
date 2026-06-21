@@ -120,13 +120,19 @@ namespace Plummet
 
         public void StartRun()
         {
+            // When the run begins straight from the home/attract screen the shaft is
+            // already scrolling, so keep that corridor instead of regenerating it: a
+            // ResetPath here would snap the walls to a fresh layout mid-drop. A fresh
+            // run from Game Over (RestartRun, state != Start) still regenerates it.
+            bool fromAttract = State == GameState.Start;
+
             State = GameState.Playing;
             runTime = 0f;
             ScrollSpeed = baseScrollSpeed;
 
             player.gameObject.SetActive(true);
             player.ResetPlayer();
-            if (pathManager != null)
+            if (pathManager != null && !fromAttract)
             {
                 pathManager.ResetPath();
             }

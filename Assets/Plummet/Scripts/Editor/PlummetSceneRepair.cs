@@ -77,7 +77,9 @@ namespace PlummetEditor
             GameObject startPanel = CreatePanel(uiRoot, "Start Panel");
             AddImage(startPanel.transform, "Title", LoadGameSprite("Title.png"), Anchor(0.5f, 0.79f, 850f, 215f));
             AddText(startPanel.transform, "Tap Text", "TAP TO DROP", Anchor(0.5f, 0.665f, 500f, 72f), 42, TextAnchor.MiddleCenter, new Color(1f, 1f, 1f, 0.92f));
-            AddImage(startPanel.transform, "Standing Mark", LoadGameSprite("mark.png"), Anchor(0.5f, 0.405f, 130f, 300f));
+            // Stand the character on the gameplay player's pinned screen position
+            // (~0.47 height) so the trapdoor drop hands off to the run with no jump.
+            AddImage(startPanel.transform, "Standing Mark", LoadGameSprite("mark.png"), Anchor(0.5f, 0.47f, 130f, 300f));
             Button playButton = AddTextButton(startPanel.transform, "Play Button", string.Empty, Stretch());
 
             GameObject instructionDistancePanel = CreatePanel(uiRoot, "Instruction Distance Panel");

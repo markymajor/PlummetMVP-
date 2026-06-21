@@ -20,14 +20,18 @@ namespace Plummet
 
         [Header("Falling Actor")]
         [SerializeField] private RectTransform fallingActor;
-        [SerializeField] private float fallDistance = 1500f;
-        [SerializeField] private float fallDuration = 0.55f;
+        // The standing actor sits on the gameplay player's pinned position, so the
+        // drop only needs a short dip through the doors before the run takes over;
+        // the continuously-scrolling shaft sells the rest of the fall. Keeping the
+        // dip small keeps the hand-off to the pinned player free of a visible jump.
+        [SerializeField] private float fallDistance = 160f;
+        [SerializeField] private float fallDuration = 0.42f;
         [SerializeField] private float fallSpin = 40f;
 
         [Header("Timing")]
         [SerializeField] private float holdAfterOpen = 0.05f;
-        [Tooltip("Fraction of the fall (0..1) at which the gameplay run takes over. Keep high enough that the actor is already off-screen.")]
-        [SerializeField] private float handoffFraction = 0.9f;
+        [Tooltip("Fraction of the fall (0..1) at which the gameplay run takes over. The pinned player appears at the actor's start, so hand off early while the dip is small to avoid a visible jump.")]
+        [SerializeField] private float handoffFraction = 0.5f;
 
         [Header("Optional")]
         [Tooltip("Faded to zero while the doors open (e.g. a group holding the title/tap prompt). Optional.")]
