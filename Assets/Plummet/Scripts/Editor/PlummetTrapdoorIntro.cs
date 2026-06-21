@@ -13,8 +13,14 @@ namespace PlummetEditor
     /// </summary>
     public static class PlummetTrapdoorIntro
     {
-        private const float HalfWidth = 180f;
-        private const float DoorHeight = 70f;
+        private const float HalfWidth = 200f;
+        private const float DoorHeight = 82f;
+
+        // A solid ledge reads as ground: a lit top surface over a darker front face,
+        // finished with a crisp bright lip along the very top edge (modern flat look).
+        private static readonly Color GroundFace = new Color(0.30f, 0.33f, 0.36f, 1f);
+        private static readonly Color GroundTop = new Color(0.55f, 0.57f, 0.59f, 1f);
+        private static readonly Color GroundEdge = new Color(0.73f, 0.75f, 0.77f, 1f);
 
         [MenuItem("Plummet/Add Trapdoor Intro To Scene")]
         public static void AddTrapdoorIntro()
@@ -81,15 +87,14 @@ namespace PlummetEditor
             GameObject container = new GameObject("Trapdoor", typeof(RectTransform));
             container.transform.SetParent(parent, false);
             RectTransform rect = container.GetComponent<RectTransform>();
-            rect.anchorMin = new Vector2(0.5f, 0.40f);
-            rect.anchorMax = new Vector2(0.5f, 0.40f);
+            rect.anchorMin = new Vector2(0.5f, 0.37f);
+            rect.anchorMax = new Vector2(0.5f, 0.37f);
             rect.pivot = new Vector2(0.5f, 0.5f);
             rect.sizeDelta = new Vector2(HalfWidth * 2f, DoorHeight);
             rect.anchoredPosition = Vector2.zero;
 
-            Color doorColor = new Color(0.42f, 0.43f, 0.46f, 1f);
-            leftDoor = CreateDoorHalf(rect, "Left Door", new Vector2(0f, 0.5f), doorColor);
-            rightDoor = CreateDoorHalf(rect, "Right Door", new Vector2(1f, 0.5f), doorColor);
+            leftDoor = CreateDoorHalf(rect, "Left Door", new Vector2(0f, 0.5f));
+            rightDoor = CreateDoorHalf(rect, "Right Door", new Vector2(1f, 0.5f));
 
             // Render the doors just above the character so he reads as falling through them.
             if (standingMark != null)
@@ -98,7 +103,7 @@ namespace PlummetEditor
             }
         }
 
-        private static RectTransform CreateDoorHalf(Transform parent, string name, Vector2 edge, Color color)
+        private static RectTransform CreateDoorHalf(Transform parent, string name, Vector2 edge)
         {
             GameObject door = new GameObject(name, typeof(RectTransform), typeof(Image));
             door.transform.SetParent(parent, false);
@@ -111,9 +116,32 @@ namespace PlummetEditor
             rect.anchoredPosition = Vector2.zero;
 
             Image image = door.GetComponent<Image>();
+            image.color = GroundFace;
+            image.raycastTarget = false;
+
+            // Layer a lit top surface and a bright top lip so the slab reads as a
+            // solid ledge the character stands on rather than a flat grey bar.
+            AddTopStrip(rect, "Top Surface", GroundTop, 0.36f);
+            AddTopStrip(rect, "Top Edge", GroundEdge, 0.09f);
+
+            return rect;
+        }
+
+        private static void AddTopStrip(RectTransform parent, string name, Color color, float heightFraction)
+        {
+            GameObject strip = new GameObject(name, typeof(RectTransform), typeof(Image));
+            strip.transform.SetParent(parent, false);
+
+            RectTransform rect = strip.GetComponent<RectTransform>();
+            rect.anchorMin = new Vector2(0f, 1f);
+            rect.anchorMax = new Vector2(1f, 1f);
+            rect.pivot = new Vector2(0.5f, 1f);
+            rect.sizeDelta = new Vector2(0f, DoorHeight * heightFraction);
+            rect.anchoredPosition = Vector2.zero;
+
+            Image image = strip.GetComponent<Image>();
             image.color = color;
             image.raycastTarget = false;
-            return rect;
         }
 
         private static Transform FindDeep(Transform root, string name)

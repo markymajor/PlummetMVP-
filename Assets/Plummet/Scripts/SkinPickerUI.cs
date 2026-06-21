@@ -128,6 +128,13 @@ namespace Plummet
             {
                 player.ApplySelectedSkin();
             }
+
+            // Keep the start-screen standing/falling character in sync with the pick.
+            UIManager uiManager = FindFirstObjectByType<UIManager>();
+            if (uiManager != null)
+            {
+                uiManager.RefreshStartCharacterSkin();
+            }
         }
 
         private void Refresh()

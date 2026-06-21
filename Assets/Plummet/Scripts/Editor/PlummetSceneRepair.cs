@@ -79,7 +79,7 @@ namespace PlummetEditor
             AddText(startPanel.transform, "Tap Text", "TAP TO DROP", Anchor(0.5f, 0.665f, 500f, 72f), 42, TextAnchor.MiddleCenter, new Color(1f, 1f, 1f, 0.92f));
             // Stand the character on the gameplay player's pinned screen position
             // (~0.47 height) so the trapdoor drop hands off to the run with no jump.
-            AddImage(startPanel.transform, "Standing Mark", LoadGameSprite("mark.png"), Anchor(0.5f, 0.47f, 130f, 300f));
+            Image standingMark = AddImage(startPanel.transform, "Standing Mark", LoadGameSprite("mark.png"), Anchor(0.5f, 0.47f, 130f, 300f));
             Button playButton = AddTextButton(startPanel.transform, "Play Button", string.Empty, Stretch());
 
             GameObject instructionDistancePanel = CreatePanel(uiRoot, "Instruction Distance Panel");
@@ -107,6 +107,7 @@ namespace PlummetEditor
             Button shareButton = AddImageButton(gameOverPanel.transform, "Share Button", LoadUiSprite("button-share.png"), Anchor(0.65f, 0.25f, 170f, 170f));
 
             Set(uiManager, "startPanel", startPanel);
+            Set(uiManager, "startCharacterImage", standingMark);
             Set(uiManager, "instructionDistancePanel", instructionDistancePanel);
             Set(uiManager, "instructionSpeedPanel", instructionSpeedPanel);
             Set(uiManager, "hudPanel", hudPanel);

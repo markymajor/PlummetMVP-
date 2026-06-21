@@ -25,6 +25,8 @@ namespace Plummet
         [SerializeField] private GameObject chooseSkinPanel;
         [SerializeField] private Button chooseSkinButton;
         [SerializeField] private Button chooseSkinBackButton;
+        [Tooltip("The standing character on the Start Panel (also the trapdoor falling actor). Re-skinned to the selected character.")]
+        [SerializeField] private Image startCharacterImage;
 
         private bool shouldShowOpeningInstructions = true;
         private bool showingOpeningInstructions;
@@ -103,10 +105,30 @@ namespace Plummet
             SetInstructionPanels(false, false);
             hudPanel.SetActive(false);
             gameOverPanel.SetActive(false);
+            RefreshStartCharacterSkin();
 
             if (introTransition != null)
             {
                 introTransition.ResetIntro();
+            }
+        }
+
+        /// <summary>
+        /// Shows the selected character on the standing start preview (which is also
+        /// the trapdoor falling actor), so the kid's pick is the one standing on the
+        /// land and dropping through. Safe to call before a library exists.
+        /// </summary>
+        public void RefreshStartCharacterSkin()
+        {
+            if (startCharacterImage == null || SkinLibrary.Instance == null)
+            {
+                return;
+            }
+
+            Skin skin = SkinLibrary.Instance.Selected;
+            if (skin != null && skin.Standing != null)
+            {
+                startCharacterImage.sprite = skin.Standing;
             }
         }
 
