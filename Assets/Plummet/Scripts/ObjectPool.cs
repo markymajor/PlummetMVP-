@@ -34,7 +34,18 @@ namespace Plummet
                 pooledObjects[prefab] = queue;
             }
 
-            GameObject item = queue.Count > 0 ? queue.Dequeue() : CreateInstance(prefab);
+            // Skip any pooled instances that were destroyed out from under us.
+            GameObject item = null;
+            while (queue.Count > 0 && item == null)
+            {
+                item = queue.Dequeue();
+            }
+
+            if (item == null)
+            {
+                item = CreateInstance(prefab);
+            }
+
             item.transform.SetPositionAndRotation(position, rotation);
             item.SetActive(true);
             activeObjects.Add(item);
@@ -64,14 +75,23 @@ namespace Plummet
         {
             for (int i = activeObjects.Count - 1; i >= 0; i--)
             {
-                ObjectPoolItem item = activeObjects[i].GetComponent<ObjectPoolItem>();
+                GameObject active = activeObjects[i];
+                if (active == null)
+                {
+                    // Destroyed externally (e.g. a scene rebuild) but still referenced;
+                    // drop the stale entry instead of dereferencing it.
+                    activeObjects.RemoveAt(i);
+                    continue;
+                }
+
+                ObjectPoolItem item = active.GetComponent<ObjectPoolItem>();
                 if (item != null)
                 {
                     item.Release();
                 }
                 else
                 {
-                    activeObjects[i].SetActive(false);
+                    active.SetActive(false);
                     activeObjects.RemoveAt(i);
                 }
             }
