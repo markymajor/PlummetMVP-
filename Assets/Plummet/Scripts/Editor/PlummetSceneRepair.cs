@@ -90,6 +90,10 @@ namespace PlummetEditor
             AddGroundLedge(startPanel.transform, "Ground Ledge Left", 0f, 0.32f, groundLine);
             AddGroundLedge(startPanel.transform, "Ground Ledge Right", 0.68f, 1f, groundLine);
 
+            // Darken the shaft mouth just under the ground so it reads as descending
+            // into depth (a faked gradient: stacked dark strips fading downward).
+            AddShaftMouthShadow(startPanel.transform, groundLine - 0.06f);
+
             AddImage(startPanel.transform, "Title", LoadGameSprite("Title.png"), Anchor(0.5f, 0.9f, 720f, 182f));
             AddText(startPanel.transform, "Tap Text", "TAP TO DROP", Anchor(0.5f, 0.8f, 500f, 70f), 40, TextAnchor.MiddleCenter, new Color(0.12f, 0.13f, 0.16f, 0.85f));
             // Standing Mark is sized to the world player's on-screen footprint (~514px
@@ -679,6 +683,28 @@ namespace PlummetEditor
 
             AddLedgeStrip(ledge.transform, "Top Surface", new Color(0.55f, 0.57f, 0.59f, 1f), 26f);
             AddLedgeStrip(ledge.transform, "Top Edge", new Color(0.73f, 0.75f, 0.77f, 1f), 7f);
+        }
+
+        // Stacked dark strips below the ground that fade downward, faking a gradient so
+        // the shaft mouth reads as descending into depth. topY is the ledge's bottom.
+        private static void AddShaftMouthShadow(Transform parent, float topY)
+        {
+            Color shade = new Color(0f, 0.05f, 0.08f, 1f);
+            float[] alphas = { 0.55f, 0.34f, 0.16f };
+            const float stripHeight = 0.05f;
+            for (int i = 0; i < alphas.Length; i++)
+            {
+                float top = topY - i * stripHeight;
+                float bottom = top - stripHeight;
+                GameObject strip = new GameObject($"Shaft Mouth Shadow {i + 1}", typeof(RectTransform), typeof(Image));
+                strip.transform.SetParent(parent, false);
+                ApplyRect(strip.GetComponent<RectTransform>(), new RectSpec(new Vector2(0f, bottom), new Vector2(1f, top), Vector2.zero, Vector2.zero, new Vector2(0.5f, 0.5f)));
+                Image image = strip.GetComponent<Image>();
+                Color c = shade;
+                c.a = alphas[i];
+                image.color = c;
+                image.raycastTarget = false;
+            }
         }
 
         private static void AddLedgeStrip(Transform parent, string name, Color color, float height)
