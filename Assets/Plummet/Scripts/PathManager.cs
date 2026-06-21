@@ -127,7 +127,9 @@ namespace Plummet
                 }
 
                 PathSegment lowest = FindLowestSegment();
-                AdvanceCorridor(lowest.BottomCenter, lowest.BottomWidth, out float bottomCenter, out float bottomWidth);
+                float topCenter = lowest.BottomCenter;
+                float topWidth = lowest.BottomWidth;
+                AdvanceCorridor(topCenter, topWidth, out float bottomCenter, out float bottomWidth);
                 float y = lowest.Root.transform.position.y - segmentHeight;
 
                 segment.Root.transform.position = new Vector3(0f, y, 0f);
