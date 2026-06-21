@@ -106,6 +106,11 @@ namespace Plummet
         {
             if (!IsPlaying)
             {
+                // Pointer "tap to drop" is handled by the full-screen Play Button on the
+                // Start Panel, which respects UI layering (the Players/Back buttons block
+                // it) and is inactive on the Choose Player / instruction screens. Only the
+                // keyboard shortcut is handled here, so taps meant for cards or buttons
+                // can never start the run.
                 if (State == GameState.Start && StartInputPressed())
                 {
                     uiManager.BeginStartFlow();
@@ -181,15 +186,14 @@ namespace Plummet
             SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
         }
 
+        // Keyboard only — pointer/touch "tap to drop" goes through the Start Panel's
+        // Play Button so it can't fire for taps on the Choose Player cards or buttons.
         private bool StartInputPressed()
         {
 #if ENABLE_INPUT_SYSTEM
-            bool keyboard = Keyboard.current != null && Keyboard.current.spaceKey.wasPressedThisFrame;
-            bool mouse = Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame;
-            bool touch = Touchscreen.current != null && Touchscreen.current.primaryTouch.press.wasPressedThisFrame;
-            return keyboard || mouse || touch;
+            return Keyboard.current != null && Keyboard.current.spaceKey.wasPressedThisFrame;
 #else
-            return Input.GetKeyDown(KeyCode.Space) || Input.GetMouseButtonDown(0);
+            return Input.GetKeyDown(KeyCode.Space);
 #endif
         }
 
