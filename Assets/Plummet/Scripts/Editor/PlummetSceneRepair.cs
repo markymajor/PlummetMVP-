@@ -228,6 +228,18 @@ namespace PlummetEditor
                 importer.mipmapEnabled = false;
                 importer.filterMode = FilterMode.Point;
                 importer.alphaIsTransparency = true;
+
+                // The shaft walls render as Tiled SpriteRenderers, which require a
+                // Full Rect mesh; otherwise Unity logs "Sprite Tiling ... not
+                // generated with Full Rect" once per tile.
+                if (Path.GetFileName(path) == "Bricks-background.png")
+                {
+                    TextureImporterSettings settings = new TextureImporterSettings();
+                    importer.ReadTextureSettings(settings);
+                    settings.spriteMeshType = SpriteMeshType.FullRect;
+                    importer.SetTextureSettings(settings);
+                }
+
                 importer.SaveAndReimport();
             }
         }
