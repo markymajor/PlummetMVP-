@@ -33,7 +33,7 @@ namespace Plummet
 
         private void Update()
         {
-            if (GameManager.Instance == null || !GameManager.Instance.IsPlaying)
+            if (GameManager.Instance == null || !GameManager.Instance.IsScrolling)
             {
                 return;
             }

@@ -21,6 +21,8 @@ namespace Plummet
         [SerializeField] private float baseScrollSpeed = 5.5f;
         [SerializeField] private float maxScrollSpeed = 12f;
         [SerializeField] private float speedIncreasePerSecond = 0.06f;
+        [Tooltip("Gentle scroll speed used on the home/attract screen so the shaft is alive behind the menu before the run begins.")]
+        [SerializeField] private float attractScrollSpeed = 2.5f;
 
         [Header("Scene References")]
         [SerializeField] private PlayerController player;
@@ -34,6 +36,15 @@ namespace Plummet
         public GameState State { get; private set; } = GameState.Start;
         public float ScrollSpeed { get; private set; }
         public bool IsPlaying => State == GameState.Playing;
+
+        /// <summary>
+        /// True whenever the shaft should be moving: during the run and during the
+        /// home/attract screen (Start), but not on Game Over. The corridor and
+        /// background scrollers read this so the home screen shows the live,
+        /// scrolling shaft and the trapdoor drop hands off into an already-moving
+        /// world with no visual jump.
+        /// </summary>
+        public bool IsScrolling => State == GameState.Start || State == GameState.Playing;
 
         /// <summary>
         /// Difficulty progress in the 0..1 range, derived from the current scroll speed.
@@ -146,6 +157,7 @@ namespace Plummet
         public void ShowStartScreen()
         {
             State = GameState.Start;
+            ScrollSpeed = attractScrollSpeed;
             obstacleSpawner.ReleaseAll();
             if (pathManager != null)
             {
