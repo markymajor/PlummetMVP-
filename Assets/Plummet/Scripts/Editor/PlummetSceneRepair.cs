@@ -105,7 +105,7 @@ namespace PlummetEditor
             // Standing Mark is sized to the world player's on-screen footprint (~514px
             // square) so there is no size pop when the drop hands off to the run. The
             // 514-tall box places mark.png's feet on the ground line (centre +0.134).
-            Image standingMark = AddImage(startPanel.transform, "Standing Mark", LoadGameSprite("mark.png"), Anchor(0.5f, groundLine + 0.134f, 514f, 514f));
+            Image standingMark = AddImage(startPanel.transform, "Standing Mark", LoadGameSprite("mark.png"), Anchor(0.5f, groundLine + 0.0755f, 290f, 290f));
             Button playButton = AddTextButton(startPanel.transform, "Play Button", string.Empty, Stretch());
 
             GameObject instructionDistancePanel = CreatePanel(uiRoot, "Instruction Distance Panel");
@@ -151,14 +151,14 @@ namespace PlummetEditor
             Set(uiManager, "shareButton", shareButton);
 
             // --- Choose Player (skins) ---
-            Button chooseSkinButton = AddTextButton(startPanel.transform, "Choose Player Button", "Players", Anchor(0.22f, 0.17f, 320f, 80f));
+            Button chooseSkinButton = AddSpriteButton(startPanel.transform, "Choose Player Button", LoadUiSprite("button-players.png"), LoadUiSprite("button-players-pressed.png"), Anchor(0.5f, 0.14f, 525f, 145f));
 
             GameObject chooseSkinPanel = CreatePanel(uiRoot, "Choose Skin Panel");
             AddImage(chooseSkinPanel.transform, "Choose Background", LoadGameSprite("main-menu-background_2014-12-19_adjusted.png"), Stretch(), false);
             AddText(chooseSkinPanel.transform, "Choose Title", "CHOOSE YOUR PLAYER", Anchor(0.5f, 0.85f, 960f, 110f), 54, TextAnchor.MiddleCenter, Color.white);
             RectTransform cardsRect = CreateChildRect(chooseSkinPanel.transform, "Cards", Anchor(0.5f, 0.52f, 1000f, 420f));
-            Button chooseSkinBackButton = AddTextButton(chooseSkinPanel.transform, "Choose Back Button", "Back", Anchor(0.3f, 0.12f, 300f, 96f));
-            Button chooseSkinSelectButton = AddTextButton(chooseSkinPanel.transform, "Choose Select Button", "Select", Anchor(0.7f, 0.12f, 300f, 96f));
+            Button chooseSkinBackButton = AddSpriteButton(chooseSkinPanel.transform, "Choose Back Button", LoadUiSprite("button-back.png"), LoadUiSprite("button-back-pressed.png"), Anchor(0.3f, 0.13f, 365f, 125f));
+            Button chooseSkinSelectButton = AddSpriteButton(chooseSkinPanel.transform, "Choose Select Button", LoadUiSprite("button-select.png"), LoadUiSprite("button-select-pressed.png"), Anchor(0.7f, 0.13f, 475f, 135f));
             SkinPickerUI picker = chooseSkinPanel.AddComponent<SkinPickerUI>();
             Set(picker, "content", cardsRect);
             Set(picker, "player", player);
@@ -577,6 +577,21 @@ namespace PlummetEditor
             Image image = AddImage(parent, name, sprite, rect);
             Button button = image.gameObject.AddComponent<Button>();
             button.targetGraphic = image;
+            return button;
+        }
+
+        // Image button with no text label (the art carries the words) that depresses on
+        // tap via a SpriteSwap to the matching pressed sprite.
+        private static Button AddSpriteButton(Transform parent, string name, Sprite normal, Sprite pressed, RectSpec rect)
+        {
+            Image image = AddImage(parent, name, normal, rect, true);
+            Button button = image.gameObject.AddComponent<Button>();
+            button.targetGraphic = image;
+            button.transition = Selectable.Transition.SpriteSwap;
+            SpriteState state = button.spriteState;
+            state.pressedSprite = pressed;
+            state.selectedSprite = normal;
+            button.spriteState = state;
             return button;
         }
 

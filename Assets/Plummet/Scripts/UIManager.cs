@@ -139,8 +139,9 @@ namespace Plummet
         /// land and dropping through. Safe to call before a library exists.
         /// </summary>
         // On-screen height (px, 1080x1920 ref) for the standing/falling start character,
-        // matching the in-shaft player's normalized height so all three read the same size.
-        private const float StartCharacterHeight = 514f;
+        // matching the in-shaft player's normalized VISIBLE height (1.66 world ~= 290px)
+        // so the standing, falling and in-shaft character all read at the same size.
+        private const float StartCharacterHeight = 290f;
 
         public void RefreshStartCharacterSkin()
         {
