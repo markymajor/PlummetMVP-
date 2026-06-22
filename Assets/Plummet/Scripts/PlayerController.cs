@@ -16,6 +16,8 @@ namespace Plummet
         [SerializeField] private Sprite[] fallingFrames;
         [SerializeField] private float fallingFrameRate = 10f;
         [SerializeField] private Vector3 startPosition = new Vector3(0f, -0.3f, 0f);
+        [Tooltip("Every skin is scaled so its sprite is this tall in world units, so different-sized skin art (Mark, Harrison, Evie) all read at the same on-screen size. ~Mark's current height.")]
+        [SerializeField] private float skinTargetHeight = 2.94f;
 
         private Camera mainCamera;
         private SpriteRenderer spriteRenderer;
@@ -69,9 +71,32 @@ namespace Plummet
             if (spriteRenderer != null)
             {
                 spriteRenderer.sprite = first != null ? first : defaultSprite;
+                NormalizeSkinScale(spriteRenderer.sprite);
             }
 
             currentFallingFrame = -1;
+        }
+
+        /// <summary>
+        /// Scale the player so the sprite is a consistent world height regardless of
+        /// the skin art's import size, so Mark, Harrison and Evie all read the same
+        /// on-screen size. scale = targetHeight / sprite world height.
+        /// </summary>
+        private void NormalizeSkinScale(Sprite sprite)
+        {
+            if (sprite == null)
+            {
+                return;
+            }
+
+            float spriteHeight = sprite.bounds.size.y;
+            if (spriteHeight <= 0.0001f)
+            {
+                return;
+            }
+
+            float scale = skinTargetHeight / spriteHeight;
+            transform.localScale = new Vector3(scale, scale, 1f);
         }
 
         private void Update()
@@ -105,6 +130,7 @@ namespace Plummet
             if (spriteRenderer != null)
             {
                 spriteRenderer.sprite = GetFirstFallingFrame() != null ? GetFirstFallingFrame() : defaultSprite;
+                NormalizeSkinScale(spriteRenderer.sprite);
             }
         }
 

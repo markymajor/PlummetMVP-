@@ -56,6 +56,12 @@ namespace Plummet
             CaptureDefaults();
         }
 
+        /// <summary>Sets the falling-pose sprite shown during the drop (per selected skin).</summary>
+        public void SetFallingSprite(Sprite sprite)
+        {
+            fallingSprite = sprite;
+        }
+
         /// <summary>Run the trapdoor sequence, invoking <paramref name="onComplete"/> at handoff.</summary>
         public void Play(Action onComplete)
         {
@@ -164,10 +170,15 @@ namespace Plummet
             }
 
             // Swap to the falling pose so the actor matches the gameplay player's frame
-            // (same pose and size) — the hand-off then has no pose or size pop.
+            // (same pose and size) — the hand-off then has no pose or size pop. Keep the
+            // actor's height and refit the width so different-aspect skins stay the same
+            // on-screen size as the standing character.
             if (actorImage != null && fallingSprite != null)
             {
+                float height = fallingActor.rect.height;
                 actorImage.sprite = fallingSprite;
+                float aspect = fallingSprite.rect.height > 0f ? fallingSprite.rect.width / fallingSprite.rect.height : 1f;
+                fallingActor.sizeDelta = new Vector2(height * aspect, height);
             }
 
             // 2. Drop the character straight down through the gap, accelerating like gravity.
