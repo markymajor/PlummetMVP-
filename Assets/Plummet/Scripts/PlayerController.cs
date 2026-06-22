@@ -16,8 +16,8 @@ namespace Plummet
         [SerializeField] private Sprite[] fallingFrames;
         [SerializeField] private float fallingFrameRate = 10f;
         [SerializeField] private Vector3 startPosition = new Vector3(0f, -0.3f, 0f);
-        [Tooltip("Every skin is scaled so its sprite is this tall in world units, so different-sized skin art (Mark, Harrison, Evie) all read at the same on-screen size. ~Mark's current height.")]
-        [SerializeField] private float skinTargetHeight = 2.94f;
+        [Tooltip("Every skin is scaled so its VISIBLE (non-transparent) sprite height is this tall in world units, so different skin art (Mark, Harrison, Evie) read at the same on-screen size regardless of transparent padding. ~Mark's current visible height.")]
+        [SerializeField] private float skinTargetHeight = 1.66f;
 
         private Camera mainCamera;
         private SpriteRenderer spriteRenderer;
@@ -78,25 +78,55 @@ namespace Plummet
         }
 
         /// <summary>
-        /// Scale the player so the sprite is a consistent world height regardless of
-        /// the skin art's import size, so Mark, Harrison and Evie all read the same
-        /// on-screen size. scale = targetHeight / sprite world height.
+        /// Scale the player so the sprite's VISIBLE (non-transparent) height matches a
+        /// consistent target, so skins read at the same on-screen size regardless of how
+        /// much transparent padding their art has (e.g. Mark's flail frames are ~56% of
+        /// their quad, Evie/Harrison fill theirs). scale = targetHeight / visible height.
         /// </summary>
         private void NormalizeSkinScale(Sprite sprite)
         {
+            float visibleHeight = VisibleSpriteHeight(sprite);
+            if (visibleHeight <= 0.0001f)
+            {
+                return;
+            }
+
+            float scale = skinTargetHeight / visibleHeight;
+            transform.localScale = new Vector3(scale, scale, 1f);
+        }
+
+        /// <summary>
+        /// World-space height of the sprite's opaque pixels. Uses the tight sprite mesh
+        /// (which hugs the non-transparent area) so transparent padding is excluded;
+        /// falls back to the full bounds if a tight mesh isn't available.
+        /// </summary>
+        private static float VisibleSpriteHeight(Sprite sprite)
+        {
             if (sprite == null)
             {
-                return;
+                return 0f;
             }
 
-            float spriteHeight = sprite.bounds.size.y;
-            if (spriteHeight <= 0.0001f)
+            Vector2[] verts = sprite.vertices;
+            if (verts != null && verts.Length > 0)
             {
-                return;
+                float minY = float.MaxValue;
+                float maxY = float.MinValue;
+                for (int i = 0; i < verts.Length; i++)
+                {
+                    float y = verts[i].y;
+                    if (y < minY) minY = y;
+                    if (y > maxY) maxY = y;
+                }
+
+                float extent = maxY - minY;
+                if (extent > 0.0001f)
+                {
+                    return extent;
+                }
             }
 
-            float scale = skinTargetHeight / spriteHeight;
-            transform.localScale = new Vector3(scale, scale, 1f);
+            return sprite.bounds.size.y;
         }
 
         private void Update()
