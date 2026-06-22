@@ -20,7 +20,7 @@ namespace Plummet
         // Walls fill outward from the corridor edge well past the screen edge so the
         // dark shaft is solid to the sides (the inner collision face is unchanged).
         [SerializeField] private float wallThickness = 4.5f;
-        [SerializeField] private Color wallColor = new Color(0.008f, 0.208f, 0.282f, 1f);
+        [SerializeField] private Color wallColor = new Color(0.024f, 0.208f, 0.282f, 1f);
 
         private readonly List<PathSegment> segments = new List<PathSegment>();
         private readonly int[] stepHistory = new int[4];

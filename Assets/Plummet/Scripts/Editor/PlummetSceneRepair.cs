@@ -16,6 +16,10 @@ namespace PlummetEditor
         private const string GamePath = "Assets/Plummet/Sprites/Game/";
         private const string UiPath = "Assets/Plummet/Sprites/UI/";
 
+        // Sampled from the reference art: dark teal procedural walls, lighter teal shaft.
+        private static readonly Color DarkWallColor = new Color(0.024f, 0.208f, 0.282f, 1f);
+        private static readonly Color ShaftColor = new Color(0.204f, 0.455f, 0.455f, 1f);
+
         [MenuItem("Plummet/Repair Open Scene")]
         public static void RepairOpenScene()
         {
@@ -37,6 +41,8 @@ namespace PlummetEditor
             DisableStraightWallColliders();
             EnsureGameplayCamera();
             PathManager pathManager = EnsurePathManager();
+            ConfigureShaftBackground();
+            CreateShaftWindows();
 
             Canvas canvas = Object.FindFirstObjectByType<Canvas>();
             if (canvas == null)
@@ -383,7 +389,7 @@ namespace PlummetEditor
             SetFloat(pathManager, "playHalfWidth", 2.65f);
             SetFloat(pathManager, "widthStep", 0.32f);
             SetFloat(pathManager, "wallThickness", 4.5f);
-            SetColor(pathManager, "wallColor", new Color(0.008f, 0.208f, 0.282f, 1f));
+            SetColor(pathManager, "wallColor", DarkWallColor);
             pathManager.ResetPath();
             return pathManager;
         }
@@ -395,14 +401,12 @@ namespace PlummetEditor
                 return;
             }
 
+            // Windows and bricks are decoration, not hazards - only real obstacles here.
             string[] prefabNames =
             {
                 "Pipe",
                 "Sewer",
-                "Window",
                 "Obsticle1",
-                "Brick-Color",
-                "Brick-white",
                 "Hatch"
             };
 
@@ -433,7 +437,7 @@ namespace PlummetEditor
                 return;
             }
 
-            camera.backgroundColor = Color.black;
+            camera.backgroundColor = ShaftColor;
             camera.rect = new Rect(0f, 0f, 1f, 1f);
 
             PortraitViewportFitter fitter = camera.GetComponent<PortraitViewportFitter>();
@@ -501,6 +505,84 @@ namespace PlummetEditor
 
             renderer.color = new Color(0.02f, 0.23f, 0.27f, 0.92f);
             EditorUtility.SetDirty(renderer);
+        }
+
+        // Paint the scrolling shaft background sprites the sampled lighter teal.
+        private static void ConfigureShaftBackground()
+        {
+            foreach (SpriteRenderer renderer in Object.FindObjectsByType<SpriteRenderer>(FindObjectsSortMode.None))
+            {
+                if (renderer.name.StartsWith("Shaft Background"))
+                {
+                    renderer.color = ShaftColor;
+                    EditorUtility.SetDirty(renderer);
+                }
+            }
+        }
+
+        // Decorative window decals that scroll + loop with the shaft like the brick
+        // details. Pure decoration: no colliders, untagged, so they never kill the player.
+        private static void CreateShaftWindows()
+        {
+            foreach (Transform t in Object.FindObjectsByType<Transform>(FindObjectsSortMode.None))
+            {
+                if (t != null && (t.name.StartsWith("Wall Window") || t.name.StartsWith("Shaft Bg Window")))
+                {
+                    Object.DestroyImmediate(t.gameObject);
+                }
+            }
+
+            Sprite litWindow = LoadGameSprite("Window.png");
+            Sprite bgWindow = LoadGameSprite("Window-Background.png");
+
+            // Lit windows: warm orange glow on the dark walls near the screen edges.
+            // x = +/-2.72 is always inside the wall (the corridor gap never reaches
+            // beyond +/-playHalfWidth = 2.65), so they sit in the dark band.
+            Color litTint = new Color(1f, 0.82f, 0.5f, 1f);
+            float[] leftY = { -5.0f, -0.3f, 4.4f };
+            float[] rightY = { -3.2f, 1.6f, 6.2f };
+            for (int i = 0; i < leftY.Length; i++)
+            {
+                CreateWindowDecal("Wall Window L" + i, litWindow, new Vector3(-2.78f, leftY[i], 0f), 0.7f, litTint, 3);
+            }
+
+            for (int i = 0; i < rightY.Length; i++)
+            {
+                CreateWindowDecal("Wall Window R" + i, litWindow, new Vector3(2.78f, rightY[i], 0f), 0.7f, litTint, 3);
+            }
+
+            // Faint background windows: low-contrast grey/teal in the lighter shaft
+            // centre, behind the player (sorting order 1, below the player's 10).
+            Color bgTint = new Color(0.66f, 0.82f, 0.85f, 0.32f);
+            float[] bgX = { -0.5f, 0.5f, -0.1f };
+            float[] bgY = { -4.2f, 0.8f, 5.2f };
+            for (int i = 0; i < bgY.Length; i++)
+            {
+                CreateWindowDecal("Shaft Bg Window " + i, bgWindow, new Vector3(bgX[i], bgY[i], 0f), 0.85f, bgTint, 1);
+            }
+        }
+
+        private static void CreateWindowDecal(string name, Sprite sprite, Vector3 position, float scale, Color tint, int sortingOrder)
+        {
+            if (sprite == null)
+            {
+                return;
+            }
+
+            GameObject go = new GameObject(name, typeof(SpriteRenderer), typeof(Scroller));
+            go.tag = "Untagged";
+            go.transform.position = position;
+            go.transform.localScale = Vector3.one * scale;
+
+            SpriteRenderer renderer = go.GetComponent<SpriteRenderer>();
+            renderer.sprite = sprite;
+            renderer.color = tint;
+            renderer.sortingOrder = sortingOrder;
+
+            Scroller scroller = go.GetComponent<Scroller>();
+            SetBool(scroller, "loop", true);
+            SetFloat(scroller, "loopHeight", 7f);
+            SetFloat(scroller, "speedMultiplier", 1f);
         }
 
         private static GameObject CreatePortraitUiRoot(Transform parent)
