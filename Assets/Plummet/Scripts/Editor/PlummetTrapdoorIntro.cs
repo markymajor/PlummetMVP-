@@ -25,6 +25,12 @@ namespace PlummetEditor
         [MenuItem("Plummet/Add Trapdoor Intro To Scene")]
         public static void AddTrapdoorIntro()
         {
+            if (EditorApplication.isPlaying)
+            {
+                Debug.LogWarning("Plummet: run scene tools in Edit mode, not Play mode.");
+                return;
+            }
+
             UIManager uiManager = Object.FindFirstObjectByType<UIManager>();
             if (uiManager == null)
             {
