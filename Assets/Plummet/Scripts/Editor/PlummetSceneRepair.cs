@@ -19,6 +19,12 @@ namespace PlummetEditor
         [MenuItem("Plummet/Repair Open Scene")]
         public static void RepairOpenScene()
         {
+            if (EditorApplication.isPlaying)
+            {
+                Debug.LogWarning("Plummet: run scene tools in Edit mode, not Play mode.");
+                return;
+            }
+
             AssetDatabase.Refresh();
             ConfigureSprites();
 
@@ -151,7 +157,8 @@ namespace PlummetEditor
             AddImage(chooseSkinPanel.transform, "Choose Background", LoadGameSprite("main-menu-background_2014-12-19_adjusted.png"), Stretch(), false);
             AddText(chooseSkinPanel.transform, "Choose Title", "CHOOSE YOUR PLAYER", Anchor(0.5f, 0.85f, 960f, 110f), 54, TextAnchor.MiddleCenter, Color.white);
             RectTransform cardsRect = CreateChildRect(chooseSkinPanel.transform, "Cards", Anchor(0.5f, 0.52f, 1000f, 420f));
-            Button chooseSkinBackButton = AddTextButton(chooseSkinPanel.transform, "Choose Back Button", "Back", Anchor(0.5f, 0.12f, 320f, 96f));
+            Button chooseSkinBackButton = AddTextButton(chooseSkinPanel.transform, "Choose Back Button", "Back", Anchor(0.3f, 0.12f, 300f, 96f));
+            Button chooseSkinSelectButton = AddTextButton(chooseSkinPanel.transform, "Choose Select Button", "Select", Anchor(0.7f, 0.12f, 300f, 96f));
             SkinPickerUI picker = chooseSkinPanel.AddComponent<SkinPickerUI>();
             Set(picker, "content", cardsRect);
             Set(picker, "player", player);
@@ -161,6 +168,8 @@ namespace PlummetEditor
             Set(uiManager, "chooseSkinPanel", chooseSkinPanel);
             Set(uiManager, "chooseSkinButton", chooseSkinButton);
             Set(uiManager, "chooseSkinBackButton", chooseSkinBackButton);
+            Set(uiManager, "chooseSkinSelectButton", chooseSkinSelectButton);
+            Set(uiManager, "skinPicker", picker);
             EditorUtility.SetDirty(skinLibrary);
 
             chooseSkinPanel.SetActive(false);

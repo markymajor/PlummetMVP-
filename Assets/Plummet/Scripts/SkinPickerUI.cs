@@ -22,9 +22,13 @@ namespace Plummet
 
         private readonly List<Image> cardBackgrounds = new List<Image>();
         private bool built;
+        // The card the player has tapped but not yet confirmed. Committed (saved +
+        // applied) only when they press Select; Back leaves the saved choice untouched.
+        private int pendingIndex;
 
         private void OnEnable()
         {
+            pendingIndex = SkinSelection.SelectedIndex;
             Build();
             Refresh();
         }
@@ -111,13 +115,22 @@ namespace Plummet
 
             int captured = index;
             Button button = card.GetComponent<Button>();
-            button.onClick.AddListener(() => Select(captured));
+            button.onClick.AddListener(() => SetPending(captured));
         }
 
-        public void Select(int index)
+        /// <summary>Mark a card as the pending pick and highlight it. Does NOT save,
+        /// apply the skin, or start the game — that only happens on Select/Commit.</summary>
+        public void SetPending(int index)
         {
-            SkinSelection.SelectedIndex = index;
+            pendingIndex = index;
             Refresh();
+        }
+
+        /// <summary>Confirm the pending pick: save it and apply the skin to the player.
+        /// Called by the Choose screen's Select button.</summary>
+        public void Commit()
+        {
+            SkinSelection.SelectedIndex = pendingIndex;
 
             if (player == null)
             {
@@ -128,24 +141,21 @@ namespace Plummet
             {
                 player.ApplySelectedSkin();
             }
-
-            // Keep the start-screen standing/falling character in sync with the pick.
-            UIManager uiManager = FindFirstObjectByType<UIManager>();
-            if (uiManager != null)
-            {
-                uiManager.RefreshStartCharacterSkin();
-            }
         }
 
         private void Refresh()
         {
-            int selected = SkinSelection.SelectedIndex;
             for (int i = 0; i < cardBackgrounds.Count; i++)
             {
-                if (cardBackgrounds[i] != null)
+                if (cardBackgrounds[i] == null)
                 {
-                    cardBackgrounds[i].color = i == selected ? selectedColor : normalColor;
+                    continue;
                 }
+
+                bool isPending = i == pendingIndex;
+                cardBackgrounds[i].color = isPending ? selectedColor : normalColor;
+                // Pop the pending card so the selection is unmistakable.
+                cardBackgrounds[i].rectTransform.localScale = isPending ? new Vector3(1.08f, 1.08f, 1f) : Vector3.one;
             }
         }
     }

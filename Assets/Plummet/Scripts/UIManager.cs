@@ -25,6 +25,8 @@ namespace Plummet
         [SerializeField] private GameObject chooseSkinPanel;
         [SerializeField] private Button chooseSkinButton;
         [SerializeField] private Button chooseSkinBackButton;
+        [SerializeField] private Button chooseSkinSelectButton;
+        [SerializeField] private SkinPickerUI skinPicker;
         [Tooltip("The standing character on the Start Panel (also the trapdoor falling actor). Re-skinned to the selected character.")]
         [SerializeField] private Image startCharacterImage;
 
@@ -44,6 +46,7 @@ namespace Plummet
             WireButton(shareButton, OnSharePressed);
             WireButton(chooseSkinButton, ShowChooseSkin);
             WireButton(chooseSkinBackButton, OnChooseSkinBack);
+            WireButton(chooseSkinSelectButton, OnChooseSkinSelect);
         }
 
         public void ShowChooseSkin()
@@ -73,6 +76,23 @@ namespace Plummet
 
         private void OnChooseSkinBack()
         {
+            // Return without changing the saved skin (the pending pick is discarded).
+            if (chooseSkinPanel != null)
+            {
+                chooseSkinPanel.SetActive(false);
+            }
+
+            ShowStart();
+        }
+
+        private void OnChooseSkinSelect()
+        {
+            // Confirm the pending pick, apply it, and return to the start screen.
+            if (skinPicker != null)
+            {
+                skinPicker.Commit();
+            }
+
             if (chooseSkinPanel != null)
             {
                 chooseSkinPanel.SetActive(false);
@@ -118,6 +138,10 @@ namespace Plummet
         /// the trapdoor falling actor), so the kid's pick is the one standing on the
         /// land and dropping through. Safe to call before a library exists.
         /// </summary>
+        // On-screen height (px, 1080x1920 ref) for the standing/falling start character,
+        // matching the in-shaft player's normalized height so all three read the same size.
+        private const float StartCharacterHeight = 514f;
+
         public void RefreshStartCharacterSkin()
         {
             if (startCharacterImage == null || SkinLibrary.Instance == null)
@@ -126,10 +150,34 @@ namespace Plummet
             }
 
             Skin skin = SkinLibrary.Instance.Selected;
-            if (skin != null && skin.Standing != null)
+            if (skin == null || skin.Standing == null)
             {
-                startCharacterImage.sprite = skin.Standing;
+                return;
             }
+
+            startCharacterImage.sprite = skin.Standing;
+            startCharacterImage.preserveAspect = true;
+            SizeToHeight(startCharacterImage.rectTransform, skin.Standing, StartCharacterHeight);
+
+            // Keep the trapdoor falling actor on this skin's falling pose, so the drop
+            // shows the chosen character at the same normalized size.
+            if (introTransition != null)
+            {
+                introTransition.SetFallingSprite(skin.FirstFrame != null ? skin.FirstFrame : skin.Standing);
+            }
+        }
+
+        // Size a rect so a preserve-aspect sprite renders at a fixed height regardless of
+        // the art's aspect ratio (width follows the sprite's aspect).
+        private static void SizeToHeight(RectTransform rect, Sprite sprite, float height)
+        {
+            if (rect == null || sprite == null || sprite.rect.height <= 0f)
+            {
+                return;
+            }
+
+            float aspect = sprite.rect.width / sprite.rect.height;
+            rect.sizeDelta = new Vector2(height * aspect, height);
         }
 
         public void BeginStartFlow()
