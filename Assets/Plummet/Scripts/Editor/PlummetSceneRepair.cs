@@ -384,14 +384,17 @@ namespace PlummetEditor
             Set(pathManager, "brickSprite", LoadGameSprite("Brick-Color.png"));
             SetInt(pathManager, "segmentCount", 20);
             SetFloat(pathManager, "segmentHeight", 1.05f);
-            // Tighter, canyon-like corridor: narrower gap, walls present more inward.
+            // Wide width range with big random swings: tight squeezes <-> open sections.
             SetFloat(pathManager, "startWidth", 3.4f);
-            SetFloat(pathManager, "minimumWidth", 2.5f);
-            SetFloat(pathManager, "maximumWidth", 3.7f);
+            SetFloat(pathManager, "minimumWidth", 2.4f);
+            SetFloat(pathManager, "maximumWidth", 4.7f);
             SetFloat(pathManager, "minStep", 0.5f);
             SetFloat(pathManager, "maxStep", 1.0f);
             SetFloat(pathManager, "playHalfWidth", 2.5f);
             SetFloat(pathManager, "widthStep", 0.28f);
+            SetFloat(pathManager, "widthEaseRate", 0.5f);
+            SetInt(pathManager, "retargetMin", 4);
+            SetInt(pathManager, "retargetMax", 9);
             SetFloat(pathManager, "wallThickness", 4.5f);
             SetColor(pathManager, "wallColor", DarkWallColor);
             // Organic edge + brick lining + mottled fill.

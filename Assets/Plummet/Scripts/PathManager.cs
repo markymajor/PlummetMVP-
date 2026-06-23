@@ -13,9 +13,15 @@ namespace Plummet
         [SerializeField] private float spawnTopY = 7.1f;
         [SerializeField] private float recycleY = 7.7f;
         [SerializeField] private float startWidth = 3.4f;
-        [SerializeField] private float minimumWidth = 2.5f;
-        [SerializeField] private float maximumWidth = 3.7f;
+        [SerializeField] private float minimumWidth = 2.4f;
+        [SerializeField] private float maximumWidth = 4.7f;
         [SerializeField] private float widthStep = 0.28f;
+        [Header("Width swings")]
+        [Tooltip("How fast the gap eases toward its current random target, per segment.")]
+        [SerializeField] private float widthEaseRate = 0.5f;
+        [Tooltip("A new random target width is chosen every this-many segments (min..max).")]
+        [SerializeField] private int retargetMin = 4;
+        [SerializeField] private int retargetMax = 9;
         [SerializeField] private float minStep = 0.5f;
         [SerializeField] private float maxStep = 1.0f;
         [SerializeField] private float playHalfWidth = 2.5f;
@@ -44,6 +50,8 @@ namespace Plummet
         private readonly List<PathSegment> segments = new List<PathSegment>();
         private readonly int[] stepHistory = new int[4];
         private int stepHistoryIndex;
+        private float widthTarget;
+        private int segmentsUntilRetarget;
 
         private void Start()
         {
@@ -198,6 +206,8 @@ namespace Plummet
             }
 
             stepHistoryIndex = 0;
+            widthTarget = startWidth;
+            segmentsUntilRetarget = 0;
         }
 
         // Stepped zig-zag corridor, faithful to the original BackgroundLayer: the gap
@@ -211,14 +221,28 @@ namespace Plummet
             {
                 bottomWidth = maximumWidth;
                 bottomCenter = 0f;
+                widthTarget = maximumWidth;
+                segmentsUntilRetarget = 0;
                 RecordStep(0);
                 return;
             }
 
             float difficultyT = GameManager.Instance != null ? GameManager.Instance.DifficultyT : 0f;
 
-            float targetMinimum = Mathf.Lerp(startWidth, minimumWidth, difficultyT);
-            bottomWidth = Mathf.Clamp(topWidth + Random.Range(-widthStep, widthStep), targetMinimum, maximumWidth);
+            // Every few segments jump to a brand-new random target spanning (most of) the
+            // full width range, then ease toward it. This produces distinct tight squeezes
+            // and distinct wide openings rather than a slow uniform drift. Big swings
+            // persist at every difficulty; difficulty only mildly lowers the wide cap.
+            if (segmentsUntilRetarget <= 0)
+            {
+                float high = Mathf.Lerp(maximumWidth, minimumWidth + (maximumWidth - minimumWidth) * 0.7f, difficultyT);
+                widthTarget = Random.Range(minimumWidth, high);
+                segmentsUntilRetarget = Random.Range(retargetMin, retargetMax + 1);
+            }
+
+            segmentsUntilRetarget--;
+            bottomWidth = Mathf.MoveTowards(topWidth, widthTarget, widthEaseRate);
+            bottomWidth = Mathf.Clamp(bottomWidth, minimumWidth, maximumWidth);
 
             float step = Mathf.Lerp(minStep, maxStep, difficultyT) * Random.Range(0.6f, 1f);
             float limit = Mathf.Max(0f, playHalfWidth - bottomWidth * 0.5f);
@@ -294,6 +318,17 @@ namespace Plummet
             private const float LeftSeed = 11.3f;
             private const float RightSeed = 67.9f;
             private const float FarOuterX = 12f;
+            // Gap that must survive both walls' edge bumps (player ~1.63 wide + margin), so
+            // edge noise can never pinch a tight section shut.
+            private const float SafeGap = 2.0f;
+            private const float AmpFloor = 0.04f;
+
+            // Edge amplitude allowed for a given gap width: full at wide gaps, shrinking to
+            // near-zero as the gap approaches SafeGap so both bumps still leave it passable.
+            private static float EdgeAmplitude(float gapWidth, float baseAmplitude)
+            {
+                return Mathf.Clamp((gapWidth - SafeGap) * 0.5f, AmpFloor, baseAmplitude);
+            }
 
             // Lighter blue tint for the (mostly transparent) brick-outline overlay, so the
             // mortar lines read as subtle lighter depth over the solid navy fill.
@@ -359,10 +394,10 @@ namespace Plummet
                 leftLiningRenderer.sharedMaterial = liningMaterial;
                 rightLiningRenderer.sharedMaterial = liningMaterial;
 
-                BuildWall(leftMesh, leftCollider, -1, bottomCenter - bottomWidth * 0.5f, topCenter - topWidth * 0.5f, height, noiseStart, LeftSeed, style);
-                BuildWall(rightMesh, rightCollider, 1, bottomCenter + bottomWidth * 0.5f, topCenter + topWidth * 0.5f, height, noiseStart, RightSeed, style);
-                BuildLining(leftLiningMesh, -1, bottomCenter - bottomWidth * 0.5f, topCenter - topWidth * 0.5f, height, noiseStart, LeftSeed, style);
-                BuildLining(rightLiningMesh, 1, bottomCenter + bottomWidth * 0.5f, topCenter + topWidth * 0.5f, height, noiseStart, RightSeed, style);
+                BuildWall(leftMesh, leftCollider, -1, bottomCenter - bottomWidth * 0.5f, topCenter - topWidth * 0.5f, bottomWidth, topWidth, height, noiseStart, LeftSeed, style);
+                BuildWall(rightMesh, rightCollider, 1, bottomCenter + bottomWidth * 0.5f, topCenter + topWidth * 0.5f, bottomWidth, topWidth, height, noiseStart, RightSeed, style);
+                BuildLining(leftLiningMesh, -1, bottomCenter - bottomWidth * 0.5f, topCenter - topWidth * 0.5f, bottomWidth, topWidth, height, noiseStart, LeftSeed, style);
+                BuildLining(rightLiningMesh, 1, bottomCenter + bottomWidth * 0.5f, topCenter + topWidth * 0.5f, bottomWidth, topWidth, height, noiseStart, RightSeed, style);
             }
 
             private static Mesh NewMesh(string name)
@@ -441,7 +476,7 @@ namespace Plummet
             // Wall strip from a Perlin-wavering inner edge out to a far straight outer edge,
             // with world-space UVs so the mottled brick fill tiles, plus a matching
             // PolygonCollider2D so deaths follow the visible edge.
-            private static void BuildWall(Mesh mesh, PolygonCollider2D collider, int side, float bottomInner, float topInner, float height, float noiseStart, float seed, WallStyle style)
+            private static void BuildWall(Mesh mesh, PolygonCollider2D collider, int side, float bottomInner, float topInner, float bottomWidth, float topWidth, float height, float noiseStart, float seed, WallStyle style)
             {
                 int n = style.Subdivisions;
                 int vertCount = (n + 1) * 2;
@@ -458,7 +493,8 @@ namespace Plummet
                     float t = (float)i / n;
                     float localY = t * height;
                     float baseInner = Mathf.Lerp(bottomInner, topInner, t);
-                    float noise = (Mathf.PerlinNoise(seed, (noiseStart + localY) * style.NoiseScale) - 0.5f) * 2f * style.Amplitude;
+                    float amp = EdgeAmplitude(Mathf.Lerp(bottomWidth, topWidth, t), style.Amplitude);
+                    float noise = (Mathf.PerlinNoise(seed, (noiseStart + localY) * style.NoiseScale) - 0.5f) * 2f * amp;
                     float innerX = baseInner - side * noise;
                     float v = (noiseStart + localY) / tile;
 
@@ -496,7 +532,7 @@ namespace Plummet
             }
 
             // A thin brick column hugging the same wavy inner edge, tiled vertically.
-            private static void BuildLining(Mesh mesh, int side, float bottomInner, float topInner, float height, float noiseStart, float seed, WallStyle style)
+            private static void BuildLining(Mesh mesh, int side, float bottomInner, float topInner, float bottomWidth, float topWidth, float height, float noiseStart, float seed, WallStyle style)
             {
                 int n = style.Subdivisions;
                 int vertCount = (n + 1) * 2;
@@ -511,7 +547,8 @@ namespace Plummet
                     float t = (float)i / n;
                     float localY = t * height;
                     float baseInner = Mathf.Lerp(bottomInner, topInner, t);
-                    float noise = (Mathf.PerlinNoise(seed, (noiseStart + localY) * style.NoiseScale) - 0.5f) * 2f * style.Amplitude;
+                    float amp = EdgeAmplitude(Mathf.Lerp(bottomWidth, topWidth, t), style.Amplitude);
+                    float noise = (Mathf.PerlinNoise(seed, (noiseStart + localY) * style.NoiseScale) - 0.5f) * 2f * amp;
                     float innerX = baseInner - side * noise;
                     // Column runs from the edge into the wall (away from the shaft).
                     float backX = innerX - side * liningWidth;
