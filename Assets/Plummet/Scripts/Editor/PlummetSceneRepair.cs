@@ -437,8 +437,14 @@ namespace PlummetEditor
                 return;
             }
 
+            // SolidColor clear so backgroundColor shows as the light shaft. Under URP this
+            // only takes effect when the camera has a UniversalAdditionalCameraData set to
+            // a Base render type; without it URP leaves the centre black even with
+            // clearFlags = SolidColor.
+            camera.clearFlags = CameraClearFlags.SolidColor;
             camera.backgroundColor = ShaftColor;
             camera.rect = new Rect(0f, 0f, 1f, 1f);
+            EnsureUrpBaseCamera(camera);
 
             PortraitViewportFitter fitter = camera.GetComponent<PortraitViewportFitter>();
             if (fitter != null)
@@ -447,6 +453,32 @@ namespace PlummetEditor
             }
 
             EditorUtility.SetDirty(camera);
+        }
+
+        // Ensure the camera carries URP camera data as a Base camera so the SolidColor clear
+        // is honoured. Done via reflection so this editor script needs no hard URP reference.
+        private static void EnsureUrpBaseCamera(Camera camera)
+        {
+            System.Type dataType = System.Type.GetType(
+                "UnityEngine.Rendering.Universal.UniversalAdditionalCameraData, Unity.RenderPipelines.Universal.Runtime");
+            if (dataType == null)
+            {
+                return;
+            }
+
+            Component data = camera.GetComponent(dataType);
+            if (data == null)
+            {
+                data = camera.gameObject.AddComponent(dataType);
+            }
+
+            System.Reflection.PropertyInfo renderType = dataType.GetProperty("renderType");
+            if (renderType != null && renderType.CanWrite)
+            {
+                renderType.SetValue(data, System.Enum.ToObject(renderType.PropertyType, 0)); // CameraRenderType.Base
+            }
+
+            EditorUtility.SetDirty(data);
         }
 
         private static void DisableStraightWallColliders()

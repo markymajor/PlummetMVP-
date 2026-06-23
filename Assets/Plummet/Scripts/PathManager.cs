@@ -353,6 +353,10 @@ namespace Plummet
             // outer edge, and a matching PolygonCollider2D so deaths follow the visible edge.
             private static void BuildWall(Mesh mesh, PolygonCollider2D collider, int side, float bottomInner, float topInner, float height, Color color, float noiseStart, float seed, EdgeNoiseParams edge)
             {
+                // Drive the wall colour through the material's _Color (reliably honoured by
+                // Sprites/Default under URP); vertex colours stay white so they don't darken it.
+                SharedMaterial.color = color;
+
                 int n = edge.Subdivisions;
                 int vertCount = (n + 1) * 2;
                 Vector3[] verts = new Vector3[vertCount];
@@ -373,8 +377,8 @@ namespace Plummet
 
                     verts[i * 2] = new Vector3(innerX, localY, 0f);
                     verts[i * 2 + 1] = new Vector3(outerX, localY, 0f);
-                    colors[i * 2] = color;
-                    colors[i * 2 + 1] = color;
+                    colors[i * 2] = Color.white;
+                    colors[i * 2 + 1] = Color.white;
                     uv[i * 2] = Vector2.zero;
                     uv[i * 2 + 1] = Vector2.zero;
 

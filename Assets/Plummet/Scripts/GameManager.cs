@@ -223,7 +223,9 @@ namespace Plummet
             }
 
             camera.rect = new Rect(0f, 0f, 1f, 1f);
-            camera.backgroundColor = Color.black;
+            // Keep the scene-configured light shaft background with a solid clear; don't
+            // force black (that would paint the shaft centre black under URP).
+            camera.clearFlags = CameraClearFlags.SolidColor;
         }
 
         private static void DisableLegacyFullScreenMatte()
