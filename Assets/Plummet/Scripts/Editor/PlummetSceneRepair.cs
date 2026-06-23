@@ -16,9 +16,9 @@ namespace PlummetEditor
         private const string GamePath = "Assets/Plummet/Sprites/Game/";
         private const string UiPath = "Assets/Plummet/Sprites/UI/";
 
-        // Sampled from the reference art: dark teal procedural walls, lighter teal shaft.
-        private static readonly Color DarkWallColor = new Color(0.024f, 0.208f, 0.282f, 1f);
-        private static readonly Color ShaftColor = new Color(0.204f, 0.455f, 0.455f, 1f);
+        // Per the reference: dark NAVY blue procedural walls, light blueish-grey shaft.
+        private static readonly Color DarkWallColor = new Color(0.06f, 0.12f, 0.28f, 1f);
+        private static readonly Color ShaftColor = new Color(0.62f, 0.69f, 0.74f, 1f);
 
         [MenuItem("Plummet/Repair Open Scene")]
         public static void RepairOpenScene()
@@ -507,7 +507,10 @@ namespace PlummetEditor
             EditorUtility.SetDirty(renderer);
         }
 
-        // Paint the scrolling shaft background sprites the sampled lighter teal.
+        // The shaft reads as a flat light blueish-grey from the camera clear colour; the
+        // old teal shaft-texture sprites are disabled (a multiply tint can't brighten that
+        // dark texture to a light shaft). Faint background-window decals are the only
+        // shaft decoration.
         private static void ConfigureShaftBackground()
         {
             foreach (SpriteRenderer renderer in Object.FindObjectsByType<SpriteRenderer>(FindObjectsSortMode.None))
@@ -515,6 +518,7 @@ namespace PlummetEditor
                 if (renderer.name.StartsWith("Shaft Background"))
                 {
                     renderer.color = ShaftColor;
+                    renderer.enabled = false;
                     EditorUtility.SetDirty(renderer);
                 }
             }
@@ -553,7 +557,7 @@ namespace PlummetEditor
 
             // Faint background windows: low-contrast grey/teal in the lighter shaft
             // centre, behind the player (sorting order 1, below the player's 10).
-            Color bgTint = new Color(0.66f, 0.82f, 0.85f, 0.32f);
+            Color bgTint = new Color(0.72f, 0.80f, 0.84f, 0.2f);
             float[] bgX = { -0.5f, 0.5f, -0.1f };
             float[] bgY = { -4.2f, 0.8f, 5.2f };
             for (int i = 0; i < bgY.Length; i++)
