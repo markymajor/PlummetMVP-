@@ -16,9 +16,11 @@ namespace PlummetEditor
         private const string GamePath = "Assets/Plummet/Sprites/Game/";
         private const string UiPath = "Assets/Plummet/Sprites/UI/";
 
-        // Per the reference: dark NAVY blue procedural walls, light blueish-grey shaft.
+        // Per the reference: dark NAVY walls, light teal-blue shaft, teal brick lining.
         private static readonly Color DarkWallColor = new Color(0.06f, 0.12f, 0.28f, 1f);
-        private static readonly Color ShaftColor = new Color(0.62f, 0.69f, 0.74f, 1f);
+        private static readonly Color ShaftColor = new Color(0.42f, 0.61f, 0.63f, 1f);
+        // White so the Brick-Color sprite's own teal bricks show as the lining trim.
+        private static readonly Color LiningColor = new Color(1f, 1f, 1f, 1f);
 
         [MenuItem("Plummet/Repair Open Scene")]
         public static void RepairOpenScene()
@@ -379,17 +381,27 @@ namespace PlummetEditor
             }
 
             Set(pathManager, "wallSprite", LoadGameSprite("Bricks-background.png"));
+            Set(pathManager, "brickSprite", LoadGameSprite("Brick-Color.png"));
             SetInt(pathManager, "segmentCount", 20);
             SetFloat(pathManager, "segmentHeight", 1.05f);
-            SetFloat(pathManager, "startWidth", 4.05f);
-            SetFloat(pathManager, "minimumWidth", 2.45f);
-            SetFloat(pathManager, "maximumWidth", 4.75f);
+            // Tighter, canyon-like corridor: narrower gap, walls present more inward.
+            SetFloat(pathManager, "startWidth", 3.4f);
+            SetFloat(pathManager, "minimumWidth", 2.5f);
+            SetFloat(pathManager, "maximumWidth", 3.7f);
             SetFloat(pathManager, "minStep", 0.5f);
             SetFloat(pathManager, "maxStep", 1.0f);
-            SetFloat(pathManager, "playHalfWidth", 2.65f);
-            SetFloat(pathManager, "widthStep", 0.32f);
+            SetFloat(pathManager, "playHalfWidth", 2.5f);
+            SetFloat(pathManager, "widthStep", 0.28f);
             SetFloat(pathManager, "wallThickness", 4.5f);
             SetColor(pathManager, "wallColor", DarkWallColor);
+            // Organic edge + brick lining + mottled fill.
+            SetFloat(pathManager, "edgeNoiseAmplitude", 0.3f);
+            SetFloat(pathManager, "edgeNoiseScale", 0.7f);
+            SetInt(pathManager, "edgeSubdivisions", 10);
+            SetFloat(pathManager, "liningWidth", 0.42f);
+            SetFloat(pathManager, "liningTile", 0.55f);
+            SetFloat(pathManager, "wallTile", 1.6f);
+            SetColor(pathManager, "liningColor", LiningColor);
             pathManager.ResetPath();
             return pathManager;
         }
@@ -571,30 +583,30 @@ namespace PlummetEditor
             Sprite litWindow = LoadGameSprite("Window.png");
             Sprite bgWindow = LoadGameSprite("Window-Background.png");
 
-            // Lit windows: warm orange glow on the dark walls near the screen edges.
-            // x = +/-2.72 is always inside the wall (the corridor gap never reaches
-            // beyond +/-playHalfWidth = 2.65), so they sit in the dark band.
+            // Lit windows: warm orange glow embedded in the dark walls near the edges.
+            // x = +/-2.85 stays inside the wall (the gap never passes +/-playHalfWidth =
+            // 2.5). Sorting order 6 sits above the wall fill/brick/lining, below the player.
             Color litTint = new Color(1f, 0.82f, 0.5f, 1f);
             float[] leftY = { -5.0f, -0.3f, 4.4f };
             float[] rightY = { -3.2f, 1.6f, 6.2f };
             for (int i = 0; i < leftY.Length; i++)
             {
-                CreateWindowDecal("Wall Window L" + i, litWindow, new Vector3(-2.78f, leftY[i], 0f), 0.7f, litTint, 3);
+                CreateWindowDecal("Wall Window L" + i, litWindow, new Vector3(-2.85f, leftY[i], 0f), 0.55f, litTint, 6);
             }
 
             for (int i = 0; i < rightY.Length; i++)
             {
-                CreateWindowDecal("Wall Window R" + i, litWindow, new Vector3(2.78f, rightY[i], 0f), 0.7f, litTint, 3);
+                CreateWindowDecal("Wall Window R" + i, litWindow, new Vector3(2.85f, rightY[i], 0f), 0.55f, litTint, 6);
             }
 
-            // Faint background windows: low-contrast grey/teal in the lighter shaft
-            // centre, behind the player (sorting order 1, below the player's 10).
-            Color bgTint = new Color(0.72f, 0.80f, 0.84f, 0.2f);
-            float[] bgX = { -0.5f, 0.5f, -0.1f };
-            float[] bgY = { -4.2f, 0.8f, 5.2f };
+            // Faint background windows: low-contrast in the lighter shaft centre, behind the
+            // player (sorting order 1). Sparse + very faint so they read as distant depth.
+            Color bgTint = new Color(0.72f, 0.80f, 0.84f, 0.16f);
+            float[] bgX = { -0.45f, 0.5f };
+            float[] bgY = { -3.5f, 3.0f };
             for (int i = 0; i < bgY.Length; i++)
             {
-                CreateWindowDecal("Shaft Bg Window " + i, bgWindow, new Vector3(bgX[i], bgY[i], 0f), 0.85f, bgTint, 1);
+                CreateWindowDecal("Shaft Bg Window " + i, bgWindow, new Vector3(bgX[i], bgY[i], 0f), 0.8f, bgTint, 1);
             }
         }
 
