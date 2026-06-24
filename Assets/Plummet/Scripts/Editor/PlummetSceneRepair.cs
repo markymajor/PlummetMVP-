@@ -88,7 +88,8 @@ namespace PlummetEditor
             // scrolling shaft (rendered by the camera) shows through the transparent
             // lower half, descending below the ground. groundLine is the surface height
             // where Mark stands and the trapdoor opens.
-            const float groundLine = 0.60f;
+            // Surface fills the top two-thirds; the shaft is the bottom third.
+            const float groundLine = 0.34f;
             GameObject startPanel = CreatePanel(uiRoot, "Start Panel");
 
             // Opaque surface backdrop + skyline above the ground (hides the shaft here).
@@ -462,6 +463,11 @@ namespace PlummetEditor
             camera.clearFlags = CameraClearFlags.SolidColor;
             camera.backgroundColor = ShaftColor;
             camera.rect = new Rect(0f, 0f, 1f, 1f);
+            // Raised so the pinned player sits in the lower-middle (just below the lowered
+            // ground line), giving a real downward trapdoor drop that hands off seamlessly
+            // while still showing shaft below for reaction.
+            Vector3 camPos = camera.transform.position;
+            camera.transform.position = new Vector3(camPos.x, 1.2f, camPos.z);
             EnsureUrpBaseCamera(camera);
 
             PortraitViewportFitter fitter = camera.GetComponent<PortraitViewportFitter>();

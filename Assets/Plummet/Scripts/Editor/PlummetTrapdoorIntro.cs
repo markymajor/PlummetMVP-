@@ -76,8 +76,8 @@ namespace PlummetEditor
             // only once he reaches the run's position - so steering takes over after the
             // fall, not during it. fallDistance carries his centre from the standing
             // ledge position down to the gameplay player's pinned screen position.
-            introSo.FindProperty("fallDistance").floatValue = 500f;
-            introSo.FindProperty("fallDuration").floatValue = 0.6f;
+            introSo.FindProperty("fallDistance").floatValue = 115f;
+            introSo.FindProperty("fallDuration").floatValue = 0.5f;
             introSo.FindProperty("handoffFraction").floatValue = 1f;
             introSo.FindProperty("fallSpin").floatValue = 0f;
             // Falling-pose sprite = the world player's first falling frame, so the actor
@@ -104,10 +104,10 @@ namespace PlummetEditor
             GameObject container = new GameObject("Trapdoor", typeof(RectTransform));
             container.transform.SetParent(parent, false);
             RectTransform rect = container.GetComponent<RectTransform>();
-            // Centre trapdoor sits in the ground line (~0.60); its top aligns with the
-            // side ground ledges so the surface reads as one continuous ledge.
-            rect.anchorMin = new Vector2(0.5f, 0.579f);
-            rect.anchorMax = new Vector2(0.5f, 0.579f);
+            // Centre trapdoor sits at the lowered ground line (~0.34); its top aligns with
+            // the side ground ledges so the surface reads as one continuous ledge.
+            rect.anchorMin = new Vector2(0.5f, 0.32f);
+            rect.anchorMax = new Vector2(0.5f, 0.32f);
             rect.pivot = new Vector2(0.5f, 0.5f);
             rect.sizeDelta = new Vector2(HalfWidth * 2f, DoorHeight);
             rect.anchoredPosition = Vector2.zero;

@@ -138,10 +138,36 @@ namespace Plummet
         /// the trapdoor falling actor), so the kid's pick is the one standing on the
         /// land and dropping through. Safe to call before a library exists.
         /// </summary>
-        // On-screen height (px, 1080x1920 ref) for the standing/falling start character,
-        // matching the in-shaft player's normalized VISIBLE height (1.66 world ~= 290px)
-        // so the standing, falling and in-shaft character all read at the same size.
-        private const float StartCharacterHeight = 290f;
+        // On-screen pixel height for the standing/falling start character, derived from the
+        // gameplay player's canonical world height projected through the game camera, so the
+        // home character and the in-shaft player render at exactly the same size (no pop).
+        private float StartCharacterHeight()
+        {
+            float worldHeight = 1.66f;
+            PlayerController player = FindFirstObjectByType<PlayerController>();
+            if (player != null)
+            {
+                worldHeight = player.CanonicalVisibleHeight;
+            }
+
+            Camera cam = Camera.main;
+            float ortho = cam != null && cam.orthographic ? cam.orthographicSize : 5.5f;
+
+            float referenceHeight = 1920f;
+            CanvasScaler scaler = GetComponentInParent<CanvasScaler>();
+            if (scaler == null)
+            {
+                scaler = FindFirstObjectByType<CanvasScaler>();
+            }
+
+            if (scaler != null && scaler.referenceResolution.y > 0f)
+            {
+                referenceHeight = scaler.referenceResolution.y;
+            }
+
+            // world height as a fraction of the camera's view height, times the UI ref height.
+            return worldHeight / (2f * ortho) * referenceHeight;
+        }
 
         public void RefreshStartCharacterSkin()
         {
@@ -158,7 +184,7 @@ namespace Plummet
 
             startCharacterImage.sprite = skin.Standing;
             startCharacterImage.preserveAspect = true;
-            SizeToHeight(startCharacterImage.rectTransform, skin.Standing, StartCharacterHeight);
+            SizeToHeight(startCharacterImage.rectTransform, skin.Standing, StartCharacterHeight());
 
             // Keep the trapdoor falling actor on this skin's falling pose, so the drop
             // shows the chosen character at the same normalized size.

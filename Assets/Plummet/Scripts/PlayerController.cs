@@ -16,8 +16,14 @@ namespace Plummet
         [SerializeField] private Sprite[] fallingFrames;
         [SerializeField] private float fallingFrameRate = 10f;
         [SerializeField] private Vector3 startPosition = new Vector3(0f, -0.3f, 0f);
-        [Tooltip("Every skin is scaled so its VISIBLE (non-transparent) sprite height is this tall in world units, so different skin art (Mark, Harrison, Evie) read at the same on-screen size regardless of transparent padding. ~Mark's current visible height.")]
+        [Tooltip("Canonical in-world player size: every skin is scaled so its VISIBLE (non-transparent) sprite height is this tall in world units, so different skin art (Mark, Harrison, Evie) read at the same on-screen size regardless of transparent padding.")]
         [SerializeField] private float skinTargetHeight = 1.66f;
+        [Tooltip("Collider hugs the sprite's VISIBLE body, inset by these fractions for fair forgiveness (limbs/edges don't kill). Recomputed per skin so all skins collide consistently.")]
+        [SerializeField] private float colliderWidthInset = 0.5f;
+        [SerializeField] private float colliderHeightInset = 0.6f;
+
+        /// <summary>Canonical visible world height shared with the home-screen character (so they match).</summary>
+        public float CanonicalVisibleHeight => skinTargetHeight;
 
         private Camera mainCamera;
         private SpriteRenderer spriteRenderer;
@@ -26,11 +32,14 @@ namespace Plummet
         private float fallingFrameTimer;
         private int currentFallingFrame = -1;
 
+        private Collider2D bodyCollider;
+
         private void Awake()
         {
             mainCamera = Camera.main;
             spriteRenderer = GetComponent<SpriteRenderer>();
             defaultSprite = spriteRenderer != null ? spriteRenderer.sprite : null;
+            bodyCollider = GetComponent<Collider2D>();
         }
 
         private void Start()
@@ -93,6 +102,64 @@ namespace Plummet
 
             float scale = skinTargetHeight / visibleHeight;
             transform.localScale = new Vector3(scale, scale, 1f);
+
+            FitColliderToBody(sprite);
+        }
+
+        /// <summary>
+        /// Sizes the collider to the sprite's VISIBLE body (from the tight sprite mesh, not
+        /// the transparent quad), inset for forgiveness. Done in LOCAL space so that, with the
+        /// per-skin localScale from <see cref="NormalizeSkinScale"/>, the WORLD collider height
+        /// is always skinTargetHeight*inset — i.e. every skin collides at the same size.
+        /// </summary>
+        private void FitColliderToBody(Sprite sprite)
+        {
+            if (bodyCollider == null)
+            {
+                bodyCollider = GetComponent<Collider2D>();
+            }
+
+            if (bodyCollider == null || sprite == null)
+            {
+                return;
+            }
+
+            Vector2[] verts = sprite.vertices;
+            if (verts == null || verts.Length == 0)
+            {
+                return;
+            }
+
+            float minX = float.MaxValue, maxX = float.MinValue, minY = float.MaxValue, maxY = float.MinValue;
+            for (int i = 0; i < verts.Length; i++)
+            {
+                if (verts[i].x < minX) minX = verts[i].x;
+                if (verts[i].x > maxX) maxX = verts[i].x;
+                if (verts[i].y < minY) minY = verts[i].y;
+                if (verts[i].y > maxY) maxY = verts[i].y;
+            }
+
+            float visibleW = maxX - minX;
+            float visibleH = maxY - minY;
+            if (visibleW <= 0.0001f || visibleH <= 0.0001f)
+            {
+                return;
+            }
+
+            Vector2 center = new Vector2((minX + maxX) * 0.5f, (minY + maxY) * 0.5f);
+            Vector2 size = new Vector2(visibleW * colliderWidthInset, visibleH * colliderHeightInset);
+
+            if (bodyCollider is CapsuleCollider2D capsule)
+            {
+                capsule.offset = center;
+                capsule.size = size;
+                capsule.direction = size.x >= size.y ? CapsuleDirection2D.Horizontal : CapsuleDirection2D.Vertical;
+            }
+            else if (bodyCollider is BoxCollider2D box)
+            {
+                box.offset = center;
+                box.size = size;
+            }
         }
 
         /// <summary>
