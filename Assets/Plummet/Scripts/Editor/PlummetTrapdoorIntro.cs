@@ -76,7 +76,7 @@ namespace PlummetEditor
             // only once he reaches the run's position - so steering takes over after the
             // fall, not during it. fallDistance carries his centre from the standing
             // ledge position down to the gameplay player's pinned screen position.
-            introSo.FindProperty("fallDistance").floatValue = 115f;
+            introSo.FindProperty("fallDistance").floatValue = 100f;
             introSo.FindProperty("fallDuration").floatValue = 0.5f;
             introSo.FindProperty("handoffFraction").floatValue = 1f;
             introSo.FindProperty("fallSpin").floatValue = 0f;

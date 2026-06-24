@@ -256,9 +256,10 @@ namespace Plummet
         // forced turn-backs at the margins and anti-drift so they never wander one way.
         private void AdvanceCorridor(float topCenter, float topWidth, out float bottomCenter, out float bottomWidth)
         {
-            // During the run's grace window keep the corridor centered and wide so the
-            // drop lands fair; normal wandering/narrowing resumes once grace ends.
-            if (GameManager.Instance != null && GameManager.Instance.InGrace)
+            // On the home screen and through the grace window keep the corridor centered and
+            // wide, so the static shaft the player drops into is an open, fair mouth and the
+            // first scrolling moments stay fair; normal wandering/narrowing resumes after.
+            if (GameManager.Instance != null && GameManager.Instance.HoldCorridorOpen)
             {
                 bottomWidth = maximumWidth;
                 bottomCenter = 0f;

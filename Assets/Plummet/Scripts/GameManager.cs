@@ -40,13 +40,18 @@ namespace Plummet
         public bool IsPlaying => State == GameState.Playing;
 
         /// <summary>
-        /// True whenever the shaft should be moving: during the run and during the
-        /// home/attract screen (Start), but not on Game Over. The corridor and
-        /// background scrollers read this so the home screen shows the live,
-        /// scrolling shaft and the trapdoor drop hands off into an already-moving
-        /// world with no visual jump.
+        /// True only while Playing: the shaft is STATIC on the home screen and during the
+        /// trapdoor drop, and only begins scrolling once the run starts. So the drop reads
+        /// as the player falling into a still shaft, then the world rushing up past him.
         /// </summary>
-        public bool IsScrolling => State == GameState.Start || State == GameState.Playing;
+        public bool IsScrolling => State == GameState.Playing;
+
+        /// <summary>
+        /// Hold the corridor centered and wide: on the home screen (so the static shaft the
+        /// player drops into is a fair, open mouth) and through the grace window (so the
+        /// first scrolling moments stay fair). Lets the same corridor carry from drop to run.
+        /// </summary>
+        public bool HoldCorridorOpen => State == GameState.Start || InGrace;
 
         /// <summary>
         /// True during the brief grace window at the start of a run. While true the

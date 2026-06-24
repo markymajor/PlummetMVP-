@@ -30,6 +30,10 @@ namespace Plummet
         [SerializeField] private float fallDistance = 500f;
         [SerializeField] private float fallDuration = 0.6f;
         [SerializeField] private float fallSpin = 0f;
+        [Tooltip("Forward tip (deg) the standing sprite tips into mid-fall before recovering to 0, so the pose dives procedurally without bespoke frames (Mark + single-pose kids).")]
+        [SerializeField] private float diveTipAngle = -75f;
+        [Tooltip("Fraction of the fall at which the standing sprite swaps to the falling frame.")]
+        [SerializeField] private float poseSwapFraction = 0.45f;
 
         [Header("Timing")]
         [SerializeField] private float holdAfterOpen = 0.05f;
@@ -169,28 +173,41 @@ namespace Plummet
                 yield return new WaitForSeconds(holdAfterOpen);
             }
 
-            // Swap to the falling pose so the actor matches the gameplay player's frame
-            // (same pose and size) — the hand-off then has no pose or size pop. Keep the
-            // actor's height and refit the width so different-aspect skins stay the same
-            // on-screen size as the standing character.
-            if (actorImage != null && fallingSprite != null)
-            {
-                float height = fallingActor.rect.height;
-                actorImage.sprite = fallingSprite;
-                float aspect = fallingSprite.rect.height > 0f ? fallingSprite.rect.width / fallingSprite.rect.height : 1f;
-                fallingActor.sizeDelta = new Vector2(height * aspect, height);
-            }
-
-            // 2. Drop the character straight down through the gap, accelerating like gravity.
+            // 2. Drop straight down, accelerating like gravity, while procedurally turning
+            //    the pose standing -> falling: tip forward into a dive over the first part of
+            //    the fall, swap to the falling frame at poseSwapFraction, then recover the
+            //    rotation back to 0 so the hand-off to the gameplay player (upright falling
+            //    frame, no spin) is seamless. Works for Mark (distinct frames) and the
+            //    single-pose kids (tip-and-recover only; no frame to swap to).
+            bool swapped = false;
             duration = Mathf.Max(0.0001f, fallDuration);
             for (float t = 0f; t < duration; t += Time.deltaTime)
             {
                 float linear = Mathf.Clamp01(t / duration);
-                float k = EaseIn(linear);
+                float fallK = EaseIn(linear);
+
                 if (fallingActor != null)
                 {
-                    fallingActor.anchoredPosition = actorHomePosition + new Vector2(0f, -fallDistance * k);
-                    fallingActor.localRotation = Quaternion.Euler(0f, 0f, actorHomeZ + fallSpin * k);
+                    fallingActor.anchoredPosition = actorHomePosition + new Vector2(0f, -fallDistance * fallK);
+
+                    float tip;
+                    if (linear < poseSwapFraction)
+                    {
+                        tip = Mathf.Lerp(0f, diveTipAngle, EaseOut(linear / Mathf.Max(0.0001f, poseSwapFraction)));
+                    }
+                    else
+                    {
+                        if (!swapped)
+                        {
+                            SwapToFallingPose();
+                            swapped = true;
+                        }
+
+                        float recover = (linear - poseSwapFraction) / Mathf.Max(0.0001f, 1f - poseSwapFraction);
+                        tip = Mathf.Lerp(diveTipAngle, 0f, recover);
+                    }
+
+                    fallingActor.localRotation = Quaternion.Euler(0f, 0f, actorHomeZ + tip);
                 }
 
                 if (!handedOff && linear >= handoffFraction)
@@ -202,6 +219,16 @@ namespace Plummet
                 yield return null;
             }
 
+            if (!swapped)
+            {
+                SwapToFallingPose();
+            }
+
+            if (fallingActor != null)
+            {
+                fallingActor.localRotation = Quaternion.Euler(0f, 0f, actorHomeZ);
+            }
+
             if (!handedOff)
             {
                 onComplete?.Invoke();
@@ -209,6 +236,27 @@ namespace Plummet
 
             IsPlaying = false;
             routine = null;
+        }
+
+        // Swap the actor to its falling frame, keeping the on-screen height and refitting
+        // width so different-aspect skins stay the same size as the standing character.
+        // No-op for single-pose skins where the falling sprite is the standing sprite.
+        private void SwapToFallingPose()
+        {
+            if (actorImage == null || fallingActor == null || fallingSprite == null)
+            {
+                return;
+            }
+
+            if (actorImage.sprite == fallingSprite)
+            {
+                return;
+            }
+
+            float height = fallingActor.rect.height;
+            actorImage.sprite = fallingSprite;
+            float aspect = fallingSprite.rect.height > 0f ? fallingSprite.rect.width / fallingSprite.rect.height : 1f;
+            fallingActor.sizeDelta = new Vector2(height * aspect, height);
         }
 
         private void SetDoorOpen(float k)
