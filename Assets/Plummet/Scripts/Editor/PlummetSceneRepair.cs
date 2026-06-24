@@ -336,6 +336,10 @@ namespace PlummetEditor
             SetFloat(player, "horizontalLimit", 3.25f);
             SetFloat(player, "visualLeanDegrees", 6f);
             SetFloat(player, "fallingFrameRate", 12f);
+            // Collider covers the visible body incl. legs/arms; capped so wide skins still fit.
+            SetFloat(player, "colliderWidthInset", 0.85f);
+            SetFloat(player, "colliderHeightInset", 0.62f);
+            SetFloat(player, "maxColliderWidth", 1.9f);
             SetSpriteArray(player, "fallingFrames", fallingFrames.Length > 0 ? fallingFrames : new[] { fallingSprite });
         }
 

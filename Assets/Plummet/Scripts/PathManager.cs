@@ -47,9 +47,10 @@ namespace Plummet
         [Tooltip("World size of one mottled brick tile across the wall fill.")]
         [SerializeField] private float wallTile = 1.6f;
 
-        // Gap that must survive both walls' edge bumps (player ~1.63 + margin), so edge
-        // noise can never pinch a tight section shut. Shared by the wall mesh + obstacle API.
-        private const float SafeGap = 2.0f;
+        // Gap that must survive both walls' edge bumps, sized for the widened player collider
+        // (~1.84-1.9) plus steering margin, so edge noise can never pinch a tight section
+        // below what the player can pass. Shared by the wall mesh + obstacle API.
+        private const float SafeGap = 2.2f;
         private const float AmpFloor = 0.04f;
 
         private readonly List<PathSegment> segments = new List<PathSegment>();
@@ -588,8 +589,9 @@ namespace Plummet
                     float amp = EdgeAmplitude(Mathf.Lerp(bottomWidth, topWidth, t), style.Amplitude);
                     float noise = (Mathf.PerlinNoise(seed, (noiseStart + localY) * style.NoiseScale) - 0.5f) * 2f * amp;
                     float innerX = baseInner - side * noise;
-                    // Column runs from the edge into the wall (away from the shaft).
-                    float backX = innerX - side * liningWidth;
+                    // Column runs from the inner edge INTO the wall (away from the shaft), so
+                    // its shaft-facing face sits exactly at innerX = the wall collider edge.
+                    float backX = innerX + side * liningWidth;
                     float v = (noiseStart + localY) / vtile;
 
                     verts[i * 2] = new Vector3(innerX, localY, 0f);

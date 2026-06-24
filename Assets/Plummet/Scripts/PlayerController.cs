@@ -18,9 +18,11 @@ namespace Plummet
         [SerializeField] private Vector3 startPosition = new Vector3(0f, -0.3f, 0f);
         [Tooltip("Canonical in-world player size: every skin is scaled so its VISIBLE (non-transparent) sprite height is this tall in world units, so different skin art (Mark, Harrison, Evie) read at the same on-screen size regardless of transparent padding.")]
         [SerializeField] private float skinTargetHeight = 1.66f;
-        [Tooltip("Collider hugs the sprite's VISIBLE body, inset by these fractions for fair forgiveness (limbs/edges don't kill). Recomputed per skin so all skins collide consistently.")]
-        [SerializeField] private float colliderWidthInset = 0.5f;
-        [SerializeField] private float colliderHeightInset = 0.6f;
+        [Tooltip("Collider covers the sprite's VISIBLE body including the legs/arms that read as the character (high width inset), inset only slightly for fairness. Recomputed per skin so all skins collide consistently.")]
+        [SerializeField] private float colliderWidthInset = 0.85f;
+        [SerializeField] private float colliderHeightInset = 0.62f;
+        [Tooltip("Cap on the collider's WORLD width so wide-flail skins (Harrison/Evie) can still fit the corridor; keeps the lethal width consistent across skins.")]
+        [SerializeField] private float maxColliderWidth = 1.9f;
 
         /// <summary>Canonical visible world height shared with the home-screen character (so they match).</summary>
         public float CanonicalVisibleHeight => skinTargetHeight;
@@ -148,6 +150,14 @@ namespace Plummet
 
             Vector2 center = new Vector2((minX + maxX) * 0.5f, (minY + maxY) * 0.5f);
             Vector2 size = new Vector2(visibleW * colliderWidthInset, visibleH * colliderHeightInset);
+
+            // Cap the WORLD width (local size scales by transform.localScale) so very wide
+            // flail sprites don't make tight corridor sections impassable.
+            float worldScale = Mathf.Abs(transform.localScale.x);
+            if (maxColliderWidth > 0f && worldScale > 0.0001f && size.x * worldScale > maxColliderWidth)
+            {
+                size.x = maxColliderWidth / worldScale;
+            }
 
             if (bodyCollider is CapsuleCollider2D capsule)
             {
