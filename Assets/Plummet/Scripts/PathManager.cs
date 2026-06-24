@@ -47,6 +47,11 @@ namespace Plummet
         [Tooltip("World size of one mottled brick tile across the wall fill.")]
         [SerializeField] private float wallTile = 1.6f;
 
+        // Gap that must survive both walls' edge bumps (player ~1.63 + margin), so edge
+        // noise can never pinch a tight section shut. Shared by the wall mesh + obstacle API.
+        private const float SafeGap = 2.0f;
+        private const float AmpFloor = 0.04f;
+
         private readonly List<PathSegment> segments = new List<PathSegment>();
         private readonly int[] stepHistory = new int[4];
         private int stepHistoryIndex;
@@ -121,6 +126,42 @@ namespace Plummet
 
             position = Vector3.zero;
             return false;
+        }
+
+        // Gap centre + (base) width of the corridor at a world Y, for obstacle fairness.
+        public bool TryGetCorridorAt(float worldY, out float center, out float width)
+        {
+            for (int i = 0; i < segments.Count; i++)
+            {
+                PathSegment segment = segments[i];
+                float localY = worldY - segment.Root.transform.position.y;
+                if (localY < 0f || localY > segmentHeight)
+                {
+                    continue;
+                }
+
+                float t = Mathf.Clamp01(localY / segmentHeight);
+                center = Mathf.Lerp(segment.BottomCenter, segment.TopCenter, t);
+                width = Mathf.Lerp(segment.BottomWidth, segment.TopWidth, t);
+                return true;
+            }
+
+            center = 0f;
+            width = 0f;
+            return false;
+        }
+
+        // Per-wall edge noise amplitude for a given gap width (mirrors the wall mesh).
+        public float EdgeAmplitudeForWidth(float width)
+        {
+            return Mathf.Clamp((width - SafeGap) * 0.5f, AmpFloor, edgeNoiseAmplitude);
+        }
+
+        // Maximum inward protrusion an obstacle may have and still leave a clear lane of
+        // laneNeeded after both walls' edge bumps. Negative => no obstacle fits here.
+        public float MaxObstacleReach(float width, float laneNeeded)
+        {
+            return width - 2f * EdgeAmplitudeForWidth(width) - laneNeeded;
         }
 
         private WallStyle Style => new WallStyle
@@ -318,10 +359,6 @@ namespace Plummet
             private const float LeftSeed = 11.3f;
             private const float RightSeed = 67.9f;
             private const float FarOuterX = 12f;
-            // Gap that must survive both walls' edge bumps (player ~1.63 wide + margin), so
-            // edge noise can never pinch a tight section shut.
-            private const float SafeGap = 2.0f;
-            private const float AmpFloor = 0.04f;
 
             // Edge amplitude allowed for a given gap width: full at wide gaps, shrinking to
             // near-zero as the gap approaches SafeGap so both bumps still leave it passable.

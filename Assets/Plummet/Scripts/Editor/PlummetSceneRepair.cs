@@ -214,12 +214,15 @@ namespace PlummetEditor
             {
                 Set(spawner, "obstaclePool", pool);
                 Set(spawner, "pathManager", pathManager);
-                SetBool(spawner, "spawnOnWalls", true);
-                SetFloat(spawner, "wallX", 2.55f);
-                SetFloat(spawner, "wallInset", 0.32f);
                 SetFloat(spawner, "spawnY", -6.35f);
-                SetFloat(spawner, "initialInterval", 1.1f);
-                SetFloat(spawner, "minimumInterval", 0.55f);
+                SetFloat(spawner, "releaseY", 8.5f);
+                SetFloat(spawner, "safetyMargin", 0.5f);
+                SetFloat(spawner, "initialInterval", 2.2f);
+                SetFloat(spawner, "minimumInterval", 0.95f);
+                SetFloat(spawner, "reachFractionEarly", 0.12f);
+                SetFloat(spawner, "reachFractionLate", 0.5f);
+                SetFloat(spawner, "minVerticalSpacing", 2.2f);
+                SetFloat(spawner, "sandwichSpacing", 4.5f);
             }
 
             EnsureEventSystem();
