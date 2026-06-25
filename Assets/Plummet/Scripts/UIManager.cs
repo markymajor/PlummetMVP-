@@ -214,18 +214,18 @@ namespace Plummet
                 return;
             }
 
-            if (introTransition != null)
+            // Seamless drop: the real pinned player tips into the dive while the shaft
+            // accelerates from rest into the run - no UI actor, no hand-off.
+            GameManager.Instance.BeginDrop();
+        }
+
+        /// <summary>Hide the home-screen chrome (title/prompt/buttons) when the drop begins.</summary>
+        public void HideStartChrome()
+        {
+            if (startPanel != null)
             {
-                if (introTransition.IsPlaying)
-                {
-                    return;
-                }
-
-                introTransition.Play(() => GameManager.Instance.StartRun());
-                return;
+                startPanel.SetActive(false);
             }
-
-            GameManager.Instance.StartRun();
         }
 
         public void ShowInstructionDistance()

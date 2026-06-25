@@ -9,6 +9,7 @@ namespace Plummet
     public enum GameState
     {
         Start,
+        Dropping,
         Playing,
         GameOver
     }
@@ -23,6 +24,8 @@ namespace Plummet
         [SerializeField] private float speedIncreasePerSecond = 0.06f;
         [Tooltip("Gentle scroll speed used on the home/attract screen so the shaft is alive behind the menu before the run begins.")]
         [SerializeField] private float attractScrollSpeed = 2.5f;
+        [Tooltip("Gravity for the trapdoor drop: the scroll accelerates from 0 at this rate (world units/s^2) until it reaches baseScrollSpeed, at which point the run begins. So the home->run transition is one continuous accelerating fall.")]
+        [SerializeField] private float dropAcceleration = 8f;
         [Tooltip("Brief forgiving window at the start of each run: the corridor stays centered and wide, difficulty doesn't ramp, and no obstacles spawn, so the trapdoor drop never lands straight into a hazard.")]
         [SerializeField] private float graceDuration = 1.2f;
 
@@ -44,14 +47,18 @@ namespace Plummet
         /// trapdoor drop, and only begins scrolling once the run starts. So the drop reads
         /// as the player falling into a still shaft, then the world rushing up past him.
         /// </summary>
-        public bool IsScrolling => State == GameState.Playing;
+        public bool IsScrolling => State == GameState.Dropping || State == GameState.Playing;
 
         /// <summary>
-        /// Hold the corridor centered and wide: on the home screen (so the static shaft the
-        /// player drops into is a fair, open mouth) and through the grace window (so the
-        /// first scrolling moments stay fair). Lets the same corridor carry from drop to run.
+        /// Hold the corridor centered and wide: on the home screen and through the drop +
+        /// grace window, so the open mouth the player drops into stays fair and the same
+        /// corridor carries continuously from the static home into the scrolling run.
         /// </summary>
-        public bool HoldCorridorOpen => State == GameState.Start || InGrace;
+        public bool HoldCorridorOpen => State == GameState.Start || State == GameState.Dropping || InGrace;
+
+        /// <summary>0..1 progress of the trapdoor drop, by how far the scroll has accelerated
+        /// from rest toward the run's base speed. Drives the player's standing->falling pose.</summary>
+        public float DropProgress => State == GameState.Dropping ? Mathf.Clamp01(ScrollSpeed / Mathf.Max(0.01f, baseScrollSpeed)) : (State == GameState.Start ? 0f : 1f);
 
         /// <summary>
         /// True during the brief grace window at the start of a run. While true the
@@ -118,13 +125,25 @@ namespace Plummet
 
         private void Update()
         {
+            if (State == GameState.Dropping)
+            {
+                // The drop IS the scroll accelerating from rest under gravity. When it
+                // reaches the run's base speed, the fall has carried the player into the
+                // shaft and the run takes over - one continuous accelerating fall.
+                ScrollSpeed += dropAcceleration * Time.deltaTime;
+                if (ScrollSpeed >= baseScrollSpeed)
+                {
+                    ScrollSpeed = baseScrollSpeed;
+                    BeginRun();
+                }
+
+                return;
+            }
+
             if (!IsPlaying)
             {
-                // Pointer "tap to drop" is handled by the full-screen Play Button on the
-                // Start Panel, which respects UI layering (the Players/Back buttons block
-                // it) and is inactive on the Choose Player / instruction screens. Only the
-                // keyboard shortcut is handled here, so taps meant for cards or buttons
-                // can never start the run.
+                // Keyboard shortcut to drop; pointer taps go through the Start Panel's Play
+                // Button so they can't fire on the Choose Player cards/buttons.
                 if (State == GameState.Start && StartInputPressed())
                 {
                     uiManager.BeginStartFlow();
@@ -139,21 +158,48 @@ namespace Plummet
             ScrollSpeed = Mathf.Min(maxScrollSpeed, baseScrollSpeed + rampTime * speedIncreasePerSecond);
         }
 
+        /// <summary>Begin the trapdoor drop: the shaft starts scrolling from rest and
+        /// accelerates (gravity) into the run, while the pinned player tips into the dive.</summary>
+        public void BeginDrop()
+        {
+            if (State != GameState.Start)
+            {
+                return;
+            }
+
+            State = GameState.Dropping;
+            ScrollSpeed = 0f;
+            player.gameObject.SetActive(true);
+            player.BeginDrop();
+            uiManager.HideStartChrome();
+        }
+
+        // Drop finished: hand straight into the run WITHOUT resetting the player or the
+        // corridor - the player is already pinned in its falling pose and the corridor it
+        // fell into carries on scrolling, so there is no snap. Grace keeps it fair.
+        private void BeginRun()
+        {
+            State = GameState.Playing;
+            runTime = 0f;
+            ScrollSpeed = baseScrollSpeed;
+
+            player.gameObject.SetActive(true);
+            player.BeginRun();
+            scoreManager.ResetScore();
+            obstacleSpawner.ResetSpawner();
+            uiManager.ShowHud();
+        }
+
+        // Direct run start (a Game Over retry): regenerate everything and skip the drop.
         public void StartRun()
         {
-            // When the run begins straight from the home/attract screen the shaft is
-            // already scrolling, so keep that corridor instead of regenerating it: a
-            // ResetPath here would snap the walls to a fresh layout mid-drop. A fresh
-            // run from Game Over (RestartRun, state != Start) still regenerates it.
-            bool fromAttract = State == GameState.Start;
-
             State = GameState.Playing;
             runTime = 0f;
             ScrollSpeed = baseScrollSpeed;
 
             player.gameObject.SetActive(true);
             player.ResetPlayer();
-            if (pathManager != null && !fromAttract)
+            if (pathManager != null)
             {
                 pathManager.ResetPath();
             }
@@ -184,15 +230,17 @@ namespace Plummet
         public void ShowStartScreen()
         {
             State = GameState.Start;
-            ScrollSpeed = attractScrollSpeed;
+            ScrollSpeed = 0f; // static home: shaft and surface sit still
             obstacleSpawner.ReleaseAll();
             if (pathManager != null)
             {
                 pathManager.ResetPath();
             }
 
-            player.ResetPlayer();
-            player.gameObject.SetActive(false);
+            // The REAL player stands on the ledge (no UI stand-in), pinned at its run
+            // position, so the drop is one continuous character with no hand-off.
+            player.gameObject.SetActive(true);
+            player.ShowStanding();
             scoreManager.ResetScore();
             uiManager.ShowStart();
         }

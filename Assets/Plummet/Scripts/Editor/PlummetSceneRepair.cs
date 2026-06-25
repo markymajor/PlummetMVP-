@@ -45,6 +45,7 @@ namespace PlummetEditor
             PathManager pathManager = EnsurePathManager();
             ConfigureShaftBackground();
             CreateShaftWindows();
+            BuildWorldSurface();
 
             Canvas canvas = Object.FindFirstObjectByType<Canvas>();
             if (canvas == null)
@@ -88,33 +89,13 @@ namespace PlummetEditor
             // scrolling shaft (rendered by the camera) shows through the transparent
             // lower half, descending below the ground. groundLine is the surface height
             // where Mark stands and the trapdoor opens.
-            // Surface fills the top two-thirds; the shaft is the bottom third.
-            const float groundLine = 0.34f;
+            // The surface (sky/skyline/ledge) is now built in world space behind the player
+            // (BuildWorldSurface), so the real player stands on it and it scrolls away on the
+            // drop. The Start Panel holds only the menu chrome on top.
             GameObject startPanel = CreatePanel(uiRoot, "Start Panel");
 
-            // Opaque surface backdrop + skyline above the ground (hides the shaft here).
-            AddImage(startPanel.transform, "Surface Sky", LoadGameSprite("main-menu-background_2014-12-19_adjusted.png"), Region(0f, groundLine - 0.03f, 1f, 1f), false);
-            AddImage(startPanel.transform, "Sky Cloud 1", LoadGameSprite("Cloud1.png"), Anchor(0.2f, 0.9f, 360f, 74f));
-            AddImage(startPanel.transform, "Sky Cloud 2", LoadGameSprite("Cloud2.png"), Anchor(0.79f, 0.86f, 300f, 66f));
-            AddImage(startPanel.transform, "Start Skyscraper", LoadGameSprite("start-skyscraper.png"), Anchor(0.9f, groundLine + 0.17f, 170f, 720f));
-            AddImage(startPanel.transform, "Start Red Building", LoadGameSprite("start-red-building.png"), Anchor(0.12f, groundLine + 0.085f, 320f, 375f));
-            AddImage(startPanel.transform, "Start Great Wall", LoadGameSprite("start-great-wall.png"), Anchor(0.5f, groundLine + 0.06f, 1120f, 300f));
-
-            // Ground ledge either side of the centre trapdoor (the trapdoor itself is
-            // built by Plummet/Add Trapdoor Intro). Below the ledge the shaft descends.
-            AddGroundLedge(startPanel.transform, "Ground Ledge Left", 0f, 0.32f, groundLine);
-            AddGroundLedge(startPanel.transform, "Ground Ledge Right", 0.68f, 1f, groundLine);
-
-            // Darken the shaft mouth just under the ground so it reads as descending
-            // into depth (a faked gradient: stacked dark strips fading downward).
-            AddShaftMouthShadow(startPanel.transform, groundLine - 0.06f);
-
             AddImage(startPanel.transform, "Title", LoadGameSprite("Title.png"), Anchor(0.5f, 0.9f, 720f, 182f));
-            AddText(startPanel.transform, "Tap Text", "TAP TO DROP", Anchor(0.5f, 0.8f, 500f, 70f), 40, TextAnchor.MiddleCenter, new Color(0.12f, 0.13f, 0.16f, 0.85f));
-            // Standing Mark is sized to the world player's on-screen footprint (~514px
-            // square) so there is no size pop when the drop hands off to the run. The
-            // 514-tall box places mark.png's feet on the ground line (centre +0.134).
-            Image standingMark = AddImage(startPanel.transform, "Standing Mark", LoadGameSprite("mark.png"), Anchor(0.5f, groundLine + 0.0755f, 290f, 290f));
+            AddText(startPanel.transform, "Tap Text", "TAP TO DROP", Anchor(0.5f, 0.8f, 500f, 70f), 40, TextAnchor.MiddleCenter, new Color(0.95f, 0.97f, 1f, 0.9f));
             Button playButton = AddTextButton(startPanel.transform, "Play Button", string.Empty, Stretch());
 
             GameObject instructionDistancePanel = CreatePanel(uiRoot, "Instruction Distance Panel");
@@ -142,7 +123,6 @@ namespace PlummetEditor
             Button shareButton = AddImageButton(gameOverPanel.transform, "Share Button", LoadUiSprite("button-share.png"), Anchor(0.65f, 0.25f, 170f, 170f));
 
             Set(uiManager, "startPanel", startPanel);
-            Set(uiManager, "startCharacterImage", standingMark);
             Set(uiManager, "instructionDistancePanel", instructionDistancePanel);
             Set(uiManager, "instructionSpeedPanel", instructionSpeedPanel);
             Set(uiManager, "hudPanel", hudPanel);
@@ -565,6 +545,56 @@ namespace PlummetEditor
 
             renderer.color = new Color(0.02f, 0.23f, 0.27f, 0.92f);
             EditorUtility.SetDirty(renderer);
+        }
+
+        // The home surface (sky/skyline/ledge) as world sprites behind the player, parented
+        // to one root that scrolls up and out of view once the drop/run begins, so the real
+        // player renders in front and the world rushes past it continuously (no UI hand-off).
+        private static void BuildWorldSurface()
+        {
+            GameObject existing = GameObject.Find("Surface Root");
+            if (existing != null)
+            {
+                Object.DestroyImmediate(existing);
+            }
+
+            // Ledge top sits at the pinned player's feet (centre -0.3, ~0.83 half-height).
+            const float ledgeTop = -1.13f;
+            GameObject root = new GameObject("Surface Root");
+            root.transform.position = Vector3.zero;
+
+            AddSurfaceSprite(root.transform, "Surface Sky", LoadGameSprite("main-menu-background_2014-12-19_adjusted.png"), 0f, ledgeTop + 5f, 7.2f, 11f, 3);
+            AddSurfaceSprite(root.transform, "Surface Skyscraper", LoadGameSprite("start-skyscraper.png"), 2.45f, ledgeTop + 2.05f, 0.97f, 4.1f, 4);
+            AddSurfaceSprite(root.transform, "Surface Red Building", LoadGameSprite("start-red-building.png"), -2.3f, ledgeTop + 1.07f, 1.83f, 2.15f, 4);
+            AddSurfaceSprite(root.transform, "Surface Cloud 1", LoadGameSprite("Cloud1.png"), -1.85f, ledgeTop + 6.2f, 2.06f, 0.42f, 4);
+            AddSurfaceSprite(root.transform, "Surface Cloud 2", LoadGameSprite("Cloud2.png"), 1.8f, ledgeTop + 5.8f, 1.72f, 0.38f, 4);
+            AddSurfaceSprite(root.transform, "Surface Great Wall", LoadGameSprite("start-great-wall.png"), 0f, ledgeTop - 0.86f, 6.42f, 1.72f, 5);
+
+            Scroller scroller = root.AddComponent<Scroller>();
+            SetBool(scroller, "loop", false);
+            SetFloat(scroller, "recycleY", 99999f);
+            SetFloat(scroller, "speedMultiplier", 1f);
+            root.AddComponent<WorldSurface>();
+        }
+
+        private static void AddSurfaceSprite(Transform parent, string name, Sprite sprite, float worldX, float worldY, float worldWidth, float worldHeight, int sortingOrder)
+        {
+            if (sprite == null)
+            {
+                return;
+            }
+
+            GameObject go = new GameObject(name, typeof(SpriteRenderer));
+            go.transform.SetParent(parent, false);
+            go.transform.localPosition = new Vector3(worldX, worldY, 0f);
+
+            float nativeW = sprite.rect.width / sprite.pixelsPerUnit;
+            float nativeH = sprite.rect.height / sprite.pixelsPerUnit;
+            go.transform.localScale = new Vector3(nativeW > 0f ? worldWidth / nativeW : 1f, nativeH > 0f ? worldHeight / nativeH : 1f, 1f);
+
+            SpriteRenderer renderer = go.GetComponent<SpriteRenderer>();
+            renderer.sprite = sprite;
+            renderer.sortingOrder = sortingOrder;
         }
 
         // The shaft reads as a flat light blueish-grey from the camera clear colour; the

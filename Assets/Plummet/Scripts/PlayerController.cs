@@ -23,6 +23,10 @@ namespace Plummet
         [SerializeField] private float colliderHeightInset = 0.62f;
         [Tooltip("Cap on the collider's WORLD width so wide-flail skins (Harrison/Evie) can still fit the corridor; keeps the lethal width consistent across skins.")]
         [SerializeField] private float maxColliderWidth = 1.9f;
+        [Tooltip("Forward tip (deg) the standing sprite tips into mid-drop before recovering to 0, so the pose dives procedurally without bespoke frames.")]
+        [SerializeField] private float diveTipAngle = -75f;
+        [Tooltip("Drop progress (0..1) at which the standing sprite swaps to the falling frame.")]
+        [SerializeField] private float poseSwapFraction = 0.45f;
 
         /// <summary>Canonical visible world height shared with the home-screen character (so they match).</summary>
         public float CanonicalVisibleHeight => skinTargetHeight;
@@ -33,6 +37,8 @@ namespace Plummet
         private float lastInput;
         private float fallingFrameTimer;
         private int currentFallingFrame = -1;
+        private Sprite standingSprite;
+        private bool dropSwapped;
 
         private Collider2D bodyCollider;
 
@@ -46,7 +52,8 @@ namespace Plummet
 
         private void Start()
         {
-            ApplySelectedSkin();
+            // Start in the home standing pose; the run/drop switch the pose explicitly.
+            ShowStanding();
         }
 
         /// <summary>
@@ -208,7 +215,21 @@ namespace Plummet
 
         private void Update()
         {
-            if (GameManager.Instance == null || !GameManager.Instance.IsPlaying)
+            GameManager gm = GameManager.Instance;
+            if (gm == null)
+            {
+                return;
+            }
+
+            // During the trapdoor drop the player stays pinned and tips procedurally from
+            // standing into the dive (the world rushes up past it); no steering/death yet.
+            if (gm.State == GameState.Dropping)
+            {
+                ApplyDropPose(gm.DropProgress);
+                return;
+            }
+
+            if (!gm.IsPlaying)
             {
                 return;
             }
@@ -239,6 +260,96 @@ namespace Plummet
                 spriteRenderer.sprite = GetFirstFallingFrame() != null ? GetFirstFallingFrame() : defaultSprite;
                 NormalizeSkinScale(spriteRenderer.sprite);
             }
+        }
+
+        /// <summary>Home pose: the chosen skin standing upright, pinned at the run position.</summary>
+        public void ShowStanding()
+        {
+            ApplySelectedSkin();
+            lastInput = 0f;
+            fallingFrameTimer = 0f;
+            currentFallingFrame = -1;
+            dropSwapped = false;
+            transform.position = startPosition;
+            transform.rotation = Quaternion.identity;
+
+            Skin skin = SkinLibrary.Instance != null ? SkinLibrary.Instance.Selected : null;
+            standingSprite = skin != null && skin.Standing != null ? skin.Standing : defaultSprite;
+            if (spriteRenderer != null && standingSprite != null)
+            {
+                spriteRenderer.sprite = standingSprite;
+                NormalizeSkinScale(standingSprite);
+            }
+        }
+
+        /// <summary>Start of the trapdoor drop: pinned, standing sprite, ready to tip in.</summary>
+        public void BeginDrop()
+        {
+            dropSwapped = false;
+            transform.position = startPosition;
+            if (spriteRenderer != null && standingSprite != null)
+            {
+                spriteRenderer.sprite = standingSprite;
+                NormalizeSkinScale(standingSprite);
+            }
+        }
+
+        /// <summary>Drop finished: switch to the falling pose for the run (keeps position).</summary>
+        public void BeginRun()
+        {
+            lastInput = 0f;
+            fallingFrameTimer = 0f;
+            currentFallingFrame = -1;
+            transform.position = startPosition;
+            transform.rotation = Quaternion.identity;
+            if (!dropSwapped)
+            {
+                SwapToFallingFrame();
+            }
+
+            dropSwapped = false;
+        }
+
+        // Pinned dive: tip the standing sprite forward into a dive, swap to the falling frame
+        // mid-drop, then recover rotation to 0 so the run takes over upright. Works for Mark
+        // (distinct frames) and single-pose kids (tip-and-recover only).
+        private void ApplyDropPose(float progress)
+        {
+            transform.position = startPosition;
+
+            float tip;
+            if (progress < poseSwapFraction)
+            {
+                tip = Mathf.Lerp(0f, diveTipAngle, EaseOut(progress / Mathf.Max(0.0001f, poseSwapFraction)));
+            }
+            else
+            {
+                if (!dropSwapped)
+                {
+                    SwapToFallingFrame();
+                    dropSwapped = true;
+                }
+
+                float recover = (progress - poseSwapFraction) / Mathf.Max(0.0001f, 1f - poseSwapFraction);
+                tip = Mathf.Lerp(diveTipAngle, 0f, recover);
+            }
+
+            transform.rotation = Quaternion.Euler(0f, 0f, tip);
+        }
+
+        private void SwapToFallingFrame()
+        {
+            Sprite first = GetFirstFallingFrame();
+            if (spriteRenderer != null && first != null)
+            {
+                spriteRenderer.sprite = first;
+                NormalizeSkinScale(first);
+            }
+        }
+
+        private static float EaseOut(float x)
+        {
+            return 1f - (1f - x) * (1f - x);
         }
 
         private void AnimateFallingFrame()
