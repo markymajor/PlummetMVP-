@@ -632,54 +632,43 @@ namespace PlummetEditor
             Sprite litWindow = LoadGameSprite("Window.png");
             Sprite bgWindow = LoadGameSprite("Window-Background.png");
 
-            // Lit windows: warm orange glow embedded in the dark walls near the edges.
-            // x = +/-2.85 stays inside the wall (the gap never passes +/-playHalfWidth =
-            // 2.5). Sorting order 6 sits above the wall fill/brick/lining, below the player.
+            // Lit windows on the walls (warm orange, sorting 6 - above the wall fill/brick/
+            // lining, below the player) and faint windows in the shaft centre (sorting 1,
+            // behind the player). Each WindowDecal re-randomises its side/x/height/scale on
+            // every loop so they never read as a fixed, repeating pattern.
             Color litTint = new Color(1f, 0.82f, 0.5f, 1f);
-            float[] leftY = { -5.0f, -0.3f, 4.4f };
-            float[] rightY = { -3.2f, 1.6f, 6.2f };
-            for (int i = 0; i < leftY.Length; i++)
-            {
-                CreateWindowDecal("Wall Window L" + i, litWindow, new Vector3(-2.85f, leftY[i], 0f), 0.55f, litTint, 6);
-            }
-
-            for (int i = 0; i < rightY.Length; i++)
-            {
-                CreateWindowDecal("Wall Window R" + i, litWindow, new Vector3(2.85f, rightY[i], 0f), 0.55f, litTint, 6);
-            }
-
-            // Faint background windows: low-contrast in the lighter shaft centre, behind the
-            // player (sorting order 1). Sparse + very faint so they read as distant depth.
             Color bgTint = new Color(0.72f, 0.80f, 0.84f, 0.16f);
-            float[] bgX = { -0.45f, 0.5f };
-            float[] bgY = { -3.5f, 3.0f };
-            for (int i = 0; i < bgY.Length; i++)
+
+            for (int i = 0; i < 7; i++)
             {
-                CreateWindowDecal("Shaft Bg Window " + i, bgWindow, new Vector3(bgX[i], bgY[i], 0f), 0.8f, bgTint, 1);
+                CreateWindowDecal("Wall Window " + i, litWindow, litTint, 6, true);
+            }
+
+            for (int i = 0; i < 3; i++)
+            {
+                CreateWindowDecal("Shaft Bg Window " + i, bgWindow, bgTint, 1, false);
             }
         }
 
-        private static void CreateWindowDecal(string name, Sprite sprite, Vector3 position, float scale, Color tint, int sortingOrder)
+        private static void CreateWindowDecal(string name, Sprite sprite, Color tint, int sortingOrder, bool onWall)
         {
             if (sprite == null)
             {
                 return;
             }
 
-            GameObject go = new GameObject(name, typeof(SpriteRenderer), typeof(Scroller));
+            GameObject go = new GameObject(name, typeof(SpriteRenderer), typeof(WindowDecal));
             go.tag = "Untagged";
-            go.transform.position = position;
-            go.transform.localScale = Vector3.one * scale;
 
             SpriteRenderer renderer = go.GetComponent<SpriteRenderer>();
             renderer.sprite = sprite;
             renderer.color = tint;
             renderer.sortingOrder = sortingOrder;
 
-            Scroller scroller = go.GetComponent<Scroller>();
-            SetBool(scroller, "loop", true);
-            SetFloat(scroller, "loopHeight", 7f);
-            SetFloat(scroller, "speedMultiplier", 1f);
+            WindowDecal decal = go.GetComponent<WindowDecal>();
+            SetBool(decal, "onWall", onWall);
+            SetFloat(decal, "minScale", onWall ? 0.45f : 0.7f);
+            SetFloat(decal, "maxScale", onWall ? 0.62f : 0.95f);
         }
 
         private static GameObject CreatePortraitUiRoot(Transform parent)
