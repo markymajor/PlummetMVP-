@@ -563,12 +563,15 @@ namespace PlummetEditor
             GameObject root = new GameObject("Surface Root");
             root.transform.position = Vector3.zero;
 
-            AddSurfaceSprite(root.transform, "Surface Sky", LoadGameSprite("main-menu-background_2014-12-19_adjusted.png"), 0f, ledgeTop + 5f, 7.2f, 11f, 3);
-            AddSurfaceSprite(root.transform, "Surface Skyscraper", LoadGameSprite("start-skyscraper.png"), 2.45f, ledgeTop + 2.05f, 0.97f, 4.1f, 4);
-            AddSurfaceSprite(root.transform, "Surface Red Building", LoadGameSprite("start-red-building.png"), -2.3f, ledgeTop + 1.07f, 1.83f, 2.15f, 4);
-            AddSurfaceSprite(root.transform, "Surface Cloud 1", LoadGameSprite("Cloud1.png"), -1.85f, ledgeTop + 6.2f, 2.06f, 0.42f, 4);
-            AddSurfaceSprite(root.transform, "Surface Cloud 2", LoadGameSprite("Cloud2.png"), 1.8f, ledgeTop + 5.8f, 1.72f, 0.38f, 4);
-            AddSurfaceSprite(root.transform, "Surface Great Wall", LoadGameSprite("start-great-wall.png"), 0f, ledgeTop - 0.86f, 6.42f, 1.72f, 5);
+            // Sort the whole surface ABOVE every shaft element (walls 2, brick 3-4, lit
+            // windows 6) so none of the shaft shows through the surface; the player (10)
+            // still renders in front of the surface.
+            AddSurfaceSprite(root.transform, "Surface Sky", LoadGameSprite("main-menu-background_2014-12-19_adjusted.png"), 0f, ledgeTop + 5f, 7.2f, 11f, 7);
+            AddSurfaceSprite(root.transform, "Surface Skyscraper", LoadGameSprite("start-skyscraper.png"), 2.45f, ledgeTop + 2.05f, 0.97f, 4.1f, 8);
+            AddSurfaceSprite(root.transform, "Surface Red Building", LoadGameSprite("start-red-building.png"), -2.3f, ledgeTop + 1.07f, 1.83f, 2.15f, 8);
+            AddSurfaceSprite(root.transform, "Surface Cloud 1", LoadGameSprite("Cloud1.png"), -1.85f, ledgeTop + 6.2f, 2.06f, 0.42f, 8);
+            AddSurfaceSprite(root.transform, "Surface Cloud 2", LoadGameSprite("Cloud2.png"), 1.8f, ledgeTop + 5.8f, 1.72f, 0.38f, 8);
+            AddSurfaceSprite(root.transform, "Surface Great Wall", LoadGameSprite("start-great-wall.png"), 0f, ledgeTop - 0.86f, 6.42f, 1.72f, 9);
 
             Scroller scroller = root.AddComponent<Scroller>();
             SetBool(scroller, "loop", false);
