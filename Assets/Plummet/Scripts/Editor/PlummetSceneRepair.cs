@@ -634,23 +634,26 @@ namespace PlummetEditor
 
             // Lit windows on the walls (warm orange, sorting 6 - above the wall fill/brick/
             // lining, below the player) and faint windows in the shaft centre (sorting 1,
-            // behind the player). Each WindowDecal re-randomises its side/x/height/scale on
-            // every loop so they never read as a fixed, repeating pattern.
+            // behind the player). Each set is STRATIFIED: the loop span is split into N bands
+            // (N = window count) and window i owns band i, so the windows stay spread top-to-
+            // bottom and never clump; each re-randomises only within its own band on loop.
             Color litTint = new Color(1f, 0.82f, 0.5f, 1f);
             Color bgTint = new Color(0.72f, 0.80f, 0.84f, 0.16f);
 
-            for (int i = 0; i < 7; i++)
+            const int litCount = 7;
+            for (int i = 0; i < litCount; i++)
             {
-                CreateWindowDecal("Wall Window " + i, litWindow, litTint, 6, true);
+                CreateWindowDecal("Wall Window " + i, litWindow, litTint, 6, true, i, litCount);
             }
 
-            for (int i = 0; i < 3; i++)
+            const int bgCount = 3;
+            for (int i = 0; i < bgCount; i++)
             {
-                CreateWindowDecal("Shaft Bg Window " + i, bgWindow, bgTint, 1, false);
+                CreateWindowDecal("Shaft Bg Window " + i, bgWindow, bgTint, 1, false, i, bgCount);
             }
         }
 
-        private static void CreateWindowDecal(string name, Sprite sprite, Color tint, int sortingOrder, bool onWall)
+        private static void CreateWindowDecal(string name, Sprite sprite, Color tint, int sortingOrder, bool onWall, int slot, int count)
         {
             if (sprite == null)
             {
@@ -669,6 +672,8 @@ namespace PlummetEditor
             SetBool(decal, "onWall", onWall);
             SetFloat(decal, "minScale", onWall ? 0.45f : 0.7f);
             SetFloat(decal, "maxScale", onWall ? 0.62f : 0.95f);
+            SetInt(decal, "slot", slot);
+            SetInt(decal, "count", count);
         }
 
         private static GameObject CreatePortraitUiRoot(Transform parent)
