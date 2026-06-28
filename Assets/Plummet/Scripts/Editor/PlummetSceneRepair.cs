@@ -299,7 +299,9 @@ namespace PlummetEditor
             if (renderer != null && fallingSprite != null)
             {
                 renderer.sprite = fallingSprite;
-                renderer.sortingOrder = 10;
+                // Above the whole surface stack (sky 7 .. floor 11) so the real player stands
+                // in front of the surface and on top of the floor band.
+                renderer.sortingOrder = 12;
             }
 
             player.transform.localScale = Vector3.one * 1.15f;
@@ -558,20 +560,37 @@ namespace PlummetEditor
                 Object.DestroyImmediate(existing);
             }
 
-            // Ledge top sits at the pinned player's feet (centre -0.3, ~0.83 half-height).
-            const float ledgeTop = -1.13f;
+            // Floor line = the pinned player's feet (centre -0.3, ~0.83 half-height): the
+            // surface sits ABOVE this line, the shaft below it.
+            const float floorLine = -1.13f;
             GameObject root = new GameObject("Surface Root");
             root.transform.position = Vector3.zero;
 
             // Sort the whole surface ABOVE every shaft element (walls 2, brick 3-4, lit
-            // windows 6) so none of the shaft shows through the surface; the player (10)
-            // still renders in front of the surface.
-            AddSurfaceSprite(root.transform, "Surface Sky", LoadGameSprite("main-menu-background_2014-12-19_adjusted.png"), 0f, ledgeTop + 5f, 7.2f, 11f, 7);
-            AddSurfaceSprite(root.transform, "Surface Skyscraper", LoadGameSprite("start-skyscraper.png"), 2.45f, ledgeTop + 2.05f, 0.97f, 4.1f, 8);
-            AddSurfaceSprite(root.transform, "Surface Red Building", LoadGameSprite("start-red-building.png"), -2.3f, ledgeTop + 1.07f, 1.83f, 2.15f, 8);
-            AddSurfaceSprite(root.transform, "Surface Cloud 1", LoadGameSprite("Cloud1.png"), -1.85f, ledgeTop + 6.2f, 2.06f, 0.42f, 8);
-            AddSurfaceSprite(root.transform, "Surface Cloud 2", LoadGameSprite("Cloud2.png"), 1.8f, ledgeTop + 5.8f, 1.72f, 0.38f, 8);
-            AddSurfaceSprite(root.transform, "Surface Great Wall", LoadGameSprite("start-great-wall.png"), 0f, ledgeTop - 0.86f, 6.42f, 1.72f, 9);
+            // windows 6). Back-to-front: sky < great wall < clouds < buildings < floor, all
+            // behind the player (now 11) so the real player stands on the floor in front.
+            AddSurfaceSprite(root.transform, "Surface Sky", LoadGameSprite("main-menu-background_2014-12-19_adjusted.png"), 0f, floorLine + 5f, 7.2f, 11f, 7);
+            // Great Wall (battlements + hills baked in) raised to the surface: its base meets
+            // the floor line and the wall/hills frame the standing player, not float in the shaft.
+            AddSurfaceSprite(root.transform, "Surface Great Wall", LoadGameSprite("start-great-wall.png"), 0f, floorLine + 0.8f, 6.6f, 1.6f, 8);
+            AddSurfaceSprite(root.transform, "Surface Cloud 1", LoadGameSprite("Cloud1.png"), -1.85f, floorLine + 6.2f, 2.06f, 0.42f, 9);
+            AddSurfaceSprite(root.transform, "Surface Cloud 2", LoadGameSprite("Cloud2.png"), 1.8f, floorLine + 5.8f, 1.72f, 0.38f, 9);
+            // Pagoda + skyscraper pulled inward so they frame the player (bases on the floor).
+            AddSurfaceSprite(root.transform, "Surface Skyscraper", LoadGameSprite("start-skyscraper.png"), 1.95f, floorLine + 2.05f, 0.97f, 4.1f, 10);
+            AddSurfaceSprite(root.transform, "Surface Red Building", LoadGameSprite("start-red-building.png"), -1.85f, floorLine + 1.07f, 1.83f, 2.15f, 10);
+
+            // Surface floor: a grey street band at the standing level separating the bright
+            // surface from the dark shaft, split by a centre gap = the trapdoor the player
+            // drops through.
+            Color floorColor = new Color(0.80f, 0.82f, 0.82f, 1f);
+            Sprite slab = LoadGameSprite("Brick-white.png");
+            const float floorH = 0.4f;
+            const float floorY = floorLine - floorH * 0.5f;
+            const float gapHalf = 0.95f;
+            const float floorEdge = 3.5f;
+            float sideW = floorEdge - gapHalf;
+            AddSurfaceBand(root.transform, "Surface Floor Left", slab, -(gapHalf + floorEdge) * 0.5f, floorY, sideW, floorH, 11, floorColor);
+            AddSurfaceBand(root.transform, "Surface Floor Right", slab, (gapHalf + floorEdge) * 0.5f, floorY, sideW, floorH, 11, floorColor);
 
             Scroller scroller = root.AddComponent<Scroller>();
             SetBool(scroller, "loop", false);
@@ -600,6 +619,21 @@ namespace PlummetEditor
             renderer.sortingOrder = sortingOrder;
         }
 
+        // A solid colour band (a white sprite tinted) used for the surface floor.
+        private static void AddSurfaceBand(Transform parent, string name, Sprite sprite, float worldX, float worldY, float worldWidth, float worldHeight, int sortingOrder, Color color)
+        {
+            AddSurfaceSprite(parent, name, sprite, worldX, worldY, worldWidth, worldHeight, sortingOrder);
+            Transform t = parent.Find(name);
+            if (t != null)
+            {
+                SpriteRenderer sr = t.GetComponent<SpriteRenderer>();
+                if (sr != null)
+                {
+                    sr.color = color;
+                }
+            }
+        }
+
         // The shaft reads as a flat light blueish-grey from the camera clear colour; the
         // old teal shaft-texture sprites are disabled (a multiply tint can't brighten that
         // dark texture to a light shaft). Faint background-window decals are the only
@@ -623,7 +657,7 @@ namespace PlummetEditor
         {
             foreach (Transform t in Object.FindObjectsByType<Transform>(FindObjectsSortMode.None))
             {
-                if (t != null && (t.name.StartsWith("Wall Window") || t.name.StartsWith("Shaft Bg Window")))
+                if (t != null && (t.name.StartsWith("Wall Window") || t.name.StartsWith("Shaft Bg Window") || t.name.StartsWith("Shaft Brick")))
                 {
                     Object.DestroyImmediate(t.gameObject);
                 }
@@ -631,6 +665,7 @@ namespace PlummetEditor
 
             Sprite litWindow = LoadGameSprite("Window.png");
             Sprite bgWindow = LoadGameSprite("Window-Background.png");
+            Sprite brick = LoadGameSprite("Bricks-background.png");
 
             // Lit windows on the walls (warm orange, sorting 6 - above the wall fill/brick/
             // lining, below the player) and faint windows in the shaft centre (sorting 1,
@@ -639,21 +674,30 @@ namespace PlummetEditor
             // bottom and never clump; each re-randomises only within its own band on loop.
             Color litTint = new Color(1f, 0.82f, 0.5f, 1f);
             Color bgTint = new Color(0.72f, 0.80f, 0.84f, 0.16f);
+            // Brick decals across the shaft play area: a slightly darker teal than the shaft
+            // (ShaftColor 0.42/0.61/0.63), faint, behind everything, for subtle texture.
+            Color brickTint = new Color(0.30f, 0.47f, 0.49f, 0.5f);
 
             const int litCount = 7;
             for (int i = 0; i < litCount; i++)
             {
-                CreateWindowDecal("Wall Window " + i, litWindow, litTint, 6, true, i, litCount);
+                CreateWindowDecal("Wall Window " + i, litWindow, litTint, 6, true, i, litCount, 0.45f, 0.62f, 0f);
             }
 
             const int bgCount = 3;
             for (int i = 0; i < bgCount; i++)
             {
-                CreateWindowDecal("Shaft Bg Window " + i, bgWindow, bgTint, 1, false, i, bgCount);
+                CreateWindowDecal("Shaft Bg Window " + i, bgWindow, bgTint, 1, false, i, bgCount, 0.7f, 0.95f, 1.2f);
+            }
+
+            const int brickCount = 6;
+            for (int i = 0; i < brickCount; i++)
+            {
+                CreateWindowDecal("Shaft Brick " + i, brick, brickTint, 0, false, i, brickCount, 0.55f, 1.05f, 2.2f);
             }
         }
 
-        private static void CreateWindowDecal(string name, Sprite sprite, Color tint, int sortingOrder, bool onWall, int slot, int count)
+        private static void CreateWindowDecal(string name, Sprite sprite, Color tint, int sortingOrder, bool onWall, int slot, int count, float minScale, float maxScale, float centreXRange)
         {
             if (sprite == null)
             {
@@ -670,8 +714,9 @@ namespace PlummetEditor
 
             WindowDecal decal = go.GetComponent<WindowDecal>();
             SetBool(decal, "onWall", onWall);
-            SetFloat(decal, "minScale", onWall ? 0.45f : 0.7f);
-            SetFloat(decal, "maxScale", onWall ? 0.62f : 0.95f);
+            SetFloat(decal, "minScale", minScale);
+            SetFloat(decal, "maxScale", maxScale);
+            SetFloat(decal, "centreXRange", centreXRange);
             SetInt(decal, "slot", slot);
             SetInt(decal, "count", count);
         }

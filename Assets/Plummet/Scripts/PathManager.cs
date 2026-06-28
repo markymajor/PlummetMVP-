@@ -41,8 +41,10 @@ namespace Plummet
         [Header("Brick lining")]
         [Tooltip("Width (world units) of the brick column running down the inner wall edge.")]
         [SerializeField] private float liningWidth = 0.42f;
-        [Tooltip("World height of one brick tile down the lining.")]
-        [SerializeField] private float liningTile = 0.55f;
+        [Tooltip("World height of one brick down the lining.")]
+        [SerializeField] private float liningTile = 0.42f;
+        [Tooltip("Mortar gap (world units) left between stacked lining bricks so they read as individual bricks, not a continuous strip.")]
+        [SerializeField] private float liningGap = 0.14f;
         [SerializeField] private Color liningColor = new Color(0.16f, 0.41f, 0.43f, 1f);
         [Tooltip("World size of one mottled brick tile across the wall fill.")]
         [SerializeField] private float wallTile = 1.6f;
@@ -174,6 +176,7 @@ namespace Plummet
             LiningColor = liningColor,
             LiningWidth = liningWidth,
             LiningTile = Mathf.Max(0.1f, liningTile),
+            LiningGap = Mathf.Max(0f, liningGap),
             Amplitude = edgeNoiseAmplitude,
             NoiseScale = edgeNoiseScale,
             Subdivisions = Mathf.Max(2, edgeSubdivisions)
@@ -350,6 +353,7 @@ namespace Plummet
             public Color LiningColor;
             public float LiningWidth;
             public float LiningTile;
+            public float LiningGap;
             public float Amplitude;
             public float NoiseScale;
             public int Subdivisions;
@@ -571,44 +575,48 @@ namespace Plummet
             }
 
             // A thin brick column hugging the same wavy inner edge, tiled vertically.
+            // Discrete stacked bricks (each a UV 0..1 quad) with a mortar gap between them, so
+            // the lining reads as individual bricks rather than a continuous strip. Each brick
+            // follows the wavy inner edge; the gaps reveal the darker wall behind = mortar.
             private static void BuildLining(Mesh mesh, int side, float bottomInner, float topInner, float bottomWidth, float topWidth, float height, float noiseStart, float seed, WallStyle style)
             {
-                int n = style.Subdivisions;
-                int vertCount = (n + 1) * 2;
-                Vector3[] verts = new Vector3[vertCount];
-                Vector2[] uv = new Vector2[vertCount];
-                int[] tris = new int[n * 6];
                 float liningWidth = style.LiningWidth;
-                float vtile = style.LiningTile;
+                float brickH = Mathf.Max(0.05f, style.LiningTile);
+                float gap = Mathf.Max(0f, style.LiningGap);
+                float period = brickH + gap;
+                int bricks = Mathf.Max(1, Mathf.FloorToInt((height + gap) / period));
 
-                for (int i = 0; i <= n; i++)
+                Vector3[] verts = new Vector3[bricks * 4];
+                Vector2[] uv = new Vector2[bricks * 4];
+                int[] tris = new int[bricks * 6];
+
+                for (int k = 0; k < bricks; k++)
                 {
-                    float t = (float)i / n;
-                    float localY = t * height;
-                    float baseInner = Mathf.Lerp(bottomInner, topInner, t);
-                    float amp = EdgeAmplitude(Mathf.Lerp(bottomWidth, topWidth, t), style.Amplitude);
-                    float noise = (Mathf.PerlinNoise(seed, (noiseStart + localY) * style.NoiseScale) - 0.5f) * 2f * amp;
-                    float innerX = baseInner - side * noise;
-                    // Column runs from the inner edge INTO the wall (away from the shaft), so
-                    // its shaft-facing face sits exactly at innerX = the wall collider edge.
-                    float backX = innerX + side * liningWidth;
-                    float v = (noiseStart + localY) / vtile;
+                    float y0 = k * period;
+                    float y1 = Mathf.Min(height, y0 + brickH);
+                    float ix0 = LiningInnerX(y0, side, bottomInner, topInner, bottomWidth, topWidth, height, noiseStart, seed, style);
+                    float ix1 = LiningInnerX(y1, side, bottomInner, topInner, bottomWidth, topWidth, height, noiseStart, seed, style);
+                    // Brick runs from the inner edge INTO the wall, shaft-facing face at innerX.
+                    float bx0 = ix0 + side * liningWidth;
+                    float bx1 = ix1 + side * liningWidth;
 
-                    verts[i * 2] = new Vector3(innerX, localY, 0f);
-                    verts[i * 2 + 1] = new Vector3(backX, localY, 0f);
-                    uv[i * 2] = new Vector2(0f, v);
-                    uv[i * 2 + 1] = new Vector2(1f, v);
+                    int vb = k * 4;
+                    verts[vb + 0] = new Vector3(ix0, y0, 0f);
+                    verts[vb + 1] = new Vector3(bx0, y0, 0f);
+                    verts[vb + 2] = new Vector3(ix1, y1, 0f);
+                    verts[vb + 3] = new Vector3(bx1, y1, 0f);
+                    uv[vb + 0] = new Vector2(0f, 0f);
+                    uv[vb + 1] = new Vector2(1f, 0f);
+                    uv[vb + 2] = new Vector2(0f, 1f);
+                    uv[vb + 3] = new Vector2(1f, 1f);
 
-                    if (i < n)
-                    {
-                        int b = i * 2;
-                        tris[i * 6 + 0] = b;
-                        tris[i * 6 + 1] = b + 1;
-                        tris[i * 6 + 2] = b + 2;
-                        tris[i * 6 + 3] = b + 1;
-                        tris[i * 6 + 4] = b + 3;
-                        tris[i * 6 + 5] = b + 2;
-                    }
+                    int tb = k * 6;
+                    tris[tb + 0] = vb;
+                    tris[tb + 1] = vb + 1;
+                    tris[tb + 2] = vb + 2;
+                    tris[tb + 3] = vb + 1;
+                    tris[tb + 4] = vb + 3;
+                    tris[tb + 5] = vb + 2;
                 }
 
                 mesh.Clear();
@@ -616,6 +624,15 @@ namespace Plummet
                 mesh.triangles = tris;
                 mesh.uv = uv;
                 mesh.RecalculateBounds();
+            }
+
+            private static float LiningInnerX(float localY, int side, float bottomInner, float topInner, float bottomWidth, float topWidth, float height, float noiseStart, float seed, WallStyle style)
+            {
+                float t = height > 0f ? Mathf.Clamp01(localY / height) : 0f;
+                float baseInner = Mathf.Lerp(bottomInner, topInner, t);
+                float amp = EdgeAmplitude(Mathf.Lerp(bottomWidth, topWidth, t), style.Amplitude);
+                float noise = (Mathf.PerlinNoise(seed, (noiseStart + localY) * style.NoiseScale) - 0.5f) * 2f * amp;
+                return baseInner - side * noise;
             }
         }
     }
