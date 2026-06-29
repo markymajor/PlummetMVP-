@@ -116,8 +116,13 @@ namespace PlummetEditor
             GameObject gameOverPanel = CreatePanel(uiRoot, "Game Over Panel");
             AddDimmer(gameOverPanel.transform);
             AddImage(gameOverPanel.transform, "Game Over Image", LoadUiSprite("gameover.png"), Anchor(0.5f, 0.78f, 690f, 250f));
-            AddImage(gameOverPanel.transform, "Death Mark", LoadUiSprite("death.png"), Anchor(0.5f, 0.57f, 560f, 315f));
-            Text finalScoreText = AddText(gameOverPanel.transform, "Final Score Text", "Score 0\nBest 0", Anchor(0.5f, 0.4f, 600f, 140f), 44, TextAnchor.MiddleCenter);
+            // The single dead character is the REAL fallen player, frozen in the shaft in the
+            // selected skin - no legacy death.png stand-in (which was the wrong character for
+            // Evie/Harrison). Big in-game-style orange score (ApplyScoreStyle, like the HUD)
+            // with a smaller best beneath.
+            Text finalScoreText = AddText(gameOverPanel.transform, "Final Score Text", "0", Anchor(0.5f, 0.63f, 700f, 160f), 96, TextAnchor.MiddleCenter, new Color(1f, 0.47f, 0.18f));
+            ApplyScoreStyle(finalScoreText);
+            Text finalBestText = AddText(gameOverPanel.transform, "Final Best Text", "Best 0", Anchor(0.5f, 0.555f, 560f, 70f), 38, TextAnchor.MiddleCenter, new Color(1f, 1f, 1f, 0.9f));
             Button resetButton = AddImageButton(gameOverPanel.transform, "Reset Button", LoadUiSprite("button-reset.png"), Anchor(0.35f, 0.25f, 170f, 170f));
             Button homeButton = AddImageButton(gameOverPanel.transform, "Home Button", LoadUiSprite("button-home.png"), Anchor(0.5f, 0.25f, 170f, 170f));
             Button shareButton = AddImageButton(gameOverPanel.transform, "Share Button", LoadUiSprite("button-share.png"), Anchor(0.65f, 0.25f, 170f, 170f));
@@ -130,6 +135,7 @@ namespace PlummetEditor
             Set(uiManager, "scoreText", scoreText);
             Set(uiManager, "highScoreText", highScoreText);
             Set(uiManager, "finalScoreText", finalScoreText);
+            Set(uiManager, "finalBestText", finalBestText);
             Set(uiManager, "playButton", playButton);
             Set(uiManager, "distanceNextButton", distanceNextButton);
             Set(uiManager, "speedNextButton", speedNextButton);
@@ -774,7 +780,9 @@ namespace PlummetEditor
             GameObject dimmer = new GameObject("Dimmer", typeof(RectTransform), typeof(Image));
             dimmer.transform.SetParent(parent, false);
             ApplyRect(dimmer.GetComponent<RectTransform>(), Stretch());
-            dimmer.GetComponent<Image>().color = new Color(0f, 0f, 0f, 0.55f);
+            // Light dim: enough to lift the UI off the busy shaft, but the real fallen player
+            // (the single dead character) still reads clearly through it.
+            dimmer.GetComponent<Image>().color = new Color(0f, 0f, 0f, 0.32f);
         }
 
         private static Image AddImage(Transform parent, string name, Sprite sprite, RectSpec rect, bool preserveAspect = true)

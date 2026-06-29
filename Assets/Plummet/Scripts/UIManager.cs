@@ -13,6 +13,7 @@ namespace Plummet
         [SerializeField] private Text scoreText;
         [SerializeField] private Text highScoreText;
         [SerializeField] private Text finalScoreText;
+        [SerializeField] private Text finalBestText;
         [SerializeField] private Button playButton;
         [SerializeField] private Button distanceNextButton;
         [SerializeField] private Button speedNextButton;
@@ -266,7 +267,15 @@ namespace Plummet
             SetInstructionPanels(false, false);
             hudPanel.SetActive(false);
             gameOverPanel.SetActive(true);
-            finalScoreText.text = $"Score {score}\nBest {highScore}";
+            if (finalScoreText != null)
+            {
+                finalScoreText.text = score.ToString("N0");
+            }
+
+            if (finalBestText != null)
+            {
+                finalBestText.text = $"Best {highScore:N0}";
+            }
         }
 
         public void SetScore(int score, int highScore)
