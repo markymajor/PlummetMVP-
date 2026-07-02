@@ -1150,13 +1150,32 @@ namespace PlummetEditor
             Sprite sprite = LoadSkinSprite(id);
             if (sprite != null)
             {
-                skins.Add(new Skin(id, displayName, sprite, new[] { sprite }));
+                skins.Add(new Skin(id, displayName, sprite, new[] { sprite }, LoadDiveFrames(id)));
             }
         }
 
         private static Sprite LoadSkinSprite(string id)
         {
             return AssetDatabase.LoadAssetAtPath<Sprite>($"{GamePath}skins/{id}.png");
+        }
+
+        // One-shot trapdoor-drop dive: skins/<id>-backflip-01.png onward (Evie has 01..08).
+        // Skins without these frames keep the procedural tip-and-recover dive.
+        private static Sprite[] LoadDiveFrames(string id)
+        {
+            var frames = new System.Collections.Generic.List<Sprite>();
+            for (int i = 1; ; i++)
+            {
+                Sprite frame = AssetDatabase.LoadAssetAtPath<Sprite>($"{GamePath}skins/{id}-backflip-{i:00}.png");
+                if (frame == null)
+                {
+                    break;
+                }
+
+                frames.Add(frame);
+            }
+
+            return frames.Count > 0 ? frames.ToArray() : null;
         }
 
         [MenuItem("Plummet/Skins/Process Dropped Art")]

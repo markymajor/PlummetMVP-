@@ -39,6 +39,8 @@ namespace Plummet
         private int currentFallingFrame = -1;
         private Sprite standingSprite;
         private bool dropSwapped;
+        private Sprite[] diveFrames;
+        private int currentDiveFrame = -1;
 
         private Collider2D bodyCollider;
 
@@ -77,6 +79,8 @@ namespace Plummet
             {
                 fallingFrames = skin.FallingFrames;
             }
+
+            diveFrames = skin.HasDiveFrames ? skin.DiveFrames : null;
 
             if (spriteRenderer == null)
             {
@@ -269,6 +273,7 @@ namespace Plummet
             lastInput = 0f;
             fallingFrameTimer = 0f;
             currentFallingFrame = -1;
+            currentDiveFrame = -1;
             dropSwapped = false;
             transform.position = startPosition;
             transform.rotation = Quaternion.identity;
@@ -286,6 +291,7 @@ namespace Plummet
         public void BeginDrop()
         {
             dropSwapped = false;
+            currentDiveFrame = -1;
             transform.position = startPosition;
             if (spriteRenderer != null && standingSprite != null)
             {
@@ -310,12 +316,20 @@ namespace Plummet
             dropSwapped = false;
         }
 
-        // Pinned dive: tip the standing sprite forward into a dive, swap to the falling frame
-        // mid-drop, then recover rotation to 0 so the run takes over upright. Works for Mark
-        // (distinct frames) and single-pose kids (tip-and-recover only).
+        // Pinned dive: skins with bespoke dive frames (Evie's backflip) play them once
+        // across the drop, upright; everyone else tips the standing sprite forward into a
+        // dive, swaps to the falling frame mid-drop, then recovers rotation to 0 so the
+        // run takes over upright.
         private void ApplyDropPose(float progress)
         {
             transform.position = startPosition;
+
+            if (diveFrames != null && diveFrames.Length > 0)
+            {
+                transform.rotation = Quaternion.identity;
+                AnimateDiveFrame(progress);
+                return;
+            }
 
             float tip;
             if (progress < poseSwapFraction)
@@ -335,6 +349,26 @@ namespace Plummet
             }
 
             transform.rotation = Quaternion.Euler(0f, 0f, tip);
+        }
+
+        // One-shot: drop progress 0..1 sweeps the dive frames in order, holding the last
+        // frame until BeginRun hands over to the looping fall.
+        private void AnimateDiveFrame(float progress)
+        {
+            if (spriteRenderer == null)
+            {
+                return;
+            }
+
+            int frameIndex = Mathf.Clamp(Mathf.FloorToInt(progress * diveFrames.Length), 0, diveFrames.Length - 1);
+            if (frameIndex == currentDiveFrame || diveFrames[frameIndex] == null)
+            {
+                return;
+            }
+
+            currentDiveFrame = frameIndex;
+            spriteRenderer.sprite = diveFrames[frameIndex];
+            NormalizeSkinScale(diveFrames[frameIndex]);
         }
 
         private void SwapToFallingFrame()
