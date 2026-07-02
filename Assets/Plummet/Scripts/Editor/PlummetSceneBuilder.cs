@@ -633,7 +633,9 @@ namespace PlummetEditor
                 LoadGameSprite("mark-falling-flail-05.png"),
                 LoadGameSprite("mark-falling-flail-06.png"),
                 LoadGameSprite("mark-falling-flail-07.png"),
-                LoadGameSprite("mark-falling-flail-08.png")
+                LoadGameSprite("mark-falling-flail-08.png"),
+                LoadGameSprite("mark-falling-flail-09.png"),
+                LoadGameSprite("mark-falling-flail-10.png")
             };
 
             int validCount = 0;
