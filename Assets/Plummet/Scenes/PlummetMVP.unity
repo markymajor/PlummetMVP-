@@ -21943,16 +21943,29 @@ MonoBehaviour:
     - {fileID: 21300000, guid: e5dc86301226f8a6a3d88c8d42eb9fcf, type: 3}
     - {fileID: 21300000, guid: c2e6d1648eaddf12ebdad88f7f704db8, type: 3}
     - {fileID: 21300000, guid: 69c65e6af06e9518347ecd9138c84a95, type: 3}
+    - {fileID: 21300000, guid: 9ce0055be124648d5badee9ffaac5e22, type: 3}
+    - {fileID: 21300000, guid: ac22ad25305ac4abb8a63b6eef2cd294, type: 3}
+    diveFrames: []
   - id: harrison
     displayName: Harrison
     standing: {fileID: 21300000, guid: 7406719ba6db3475f86b2892b37edc20, type: 3}
     fallingFrames:
     - {fileID: 21300000, guid: 7406719ba6db3475f86b2892b37edc20, type: 3}
+    diveFrames: []
   - id: evie
     displayName: Evie
     standing: {fileID: 21300000, guid: 7d187e77e1651402ebd62c3771796ec8, type: 3}
     fallingFrames:
     - {fileID: 21300000, guid: 7d187e77e1651402ebd62c3771796ec8, type: 3}
+    diveFrames:
+    - {fileID: 21300000, guid: 43e67686e736e484182481dfa1f4ea9e, type: 3}
+    - {fileID: 21300000, guid: 68de01976ad7e49bb8704d120d3a4544, type: 3}
+    - {fileID: 21300000, guid: 6e791572a5c604b1d8532f466963ae6a, type: 3}
+    - {fileID: 21300000, guid: 234b7fac23ebf493984e7f4e91fbca79, type: 3}
+    - {fileID: 21300000, guid: 20e433daee25f42d28e7b4ada01a2aa5, type: 3}
+    - {fileID: 21300000, guid: 1ce1e795913d04726a7e9f240cb0b61c, type: 3}
+    - {fileID: 21300000, guid: 22209907fe9044c08b3eb9bdac8d8b48, type: 3}
+    - {fileID: 21300000, guid: 8e3b05bc9cea44905b71ecade1990353, type: 3}
 --- !u!4 &1123140473
 Transform:
   m_ObjectHideFlags: 0
@@ -22014,6 +22027,8 @@ MonoBehaviour:
   - {fileID: 21300000, guid: e5dc86301226f8a6a3d88c8d42eb9fcf, type: 3}
   - {fileID: 21300000, guid: c2e6d1648eaddf12ebdad88f7f704db8, type: 3}
   - {fileID: 21300000, guid: 69c65e6af06e9518347ecd9138c84a95, type: 3}
+  - {fileID: 21300000, guid: 9ce0055be124648d5badee9ffaac5e22, type: 3}
+  - {fileID: 21300000, guid: ac22ad25305ac4abb8a63b6eef2cd294, type: 3}
   fallingFrameRate: 12
   startPosition: {x: 0, y: -0.3, z: 0}
   skinTargetHeight: 1.66
