@@ -685,7 +685,7 @@ namespace PlummetEditor
             Color bgTint = new Color(0.32f, 0.48f, 0.51f, 0.6f);
             // Brick decals across the shaft play area: a slightly darker teal than the shaft
             // (ShaftColor 0.42/0.61/0.63), faint, behind everything, for subtle texture.
-            Color brickTint = new Color(0.30f, 0.47f, 0.49f, 0.5f);
+            Color brickTint = new Color(0.30f, 0.47f, 0.49f, 0.4f);
             // Lighter brick clusters scattered in the navy wall fill, like the OG rubble
             // decals. White alpha-mask art so this tint IS the brick colour (the original
             // Briks_* sprites are darker than the wall and can't be lightened by tinting).
@@ -697,16 +697,23 @@ namespace PlummetEditor
                 CreateWindowDecal("Wall Window " + i, litWindow, litTint, 6, true, i, litCount, 0.45f, 0.62f, 0f);
             }
 
-            const int bgCount = 4;
-            for (int i = 0; i < bgCount; i++)
+            // ONE shared lattice for all shaft-centre decals: the loop span is split into
+            // 8 bands allocated across BOTH sets (windows every 4th band, bricks in three
+            // of the rest), so no two centre decals can ever share a Y band. X is
+            // stratified too (slot % 3 -> left/centre/right lane, jittered within it) so
+            // they never stack in a column. Sparse + faint = the OG's occasional-texture
+            // feel rather than a wall of decals.
+            const int centreBands = 8;
+            int[] windowSlots = { 0, 4 };
+            foreach (int slot in windowSlots)
             {
-                CreateWindowDecal("Shaft Bg Window " + i, bgWindow, bgTint, 1, false, i, bgCount, 0.7f, 0.95f, 1.2f);
+                CreateWindowDecal("Shaft Bg Window " + slot, bgWindow, bgTint, 1, false, slot, centreBands, 0.7f, 0.95f, 1.2f, xLane: slot % 3);
             }
 
-            const int brickCount = 6;
-            for (int i = 0; i < brickCount; i++)
+            int[] brickSlots = { 2, 3, 7 };
+            foreach (int slot in brickSlots)
             {
-                CreateWindowDecal("Shaft Brick " + i, brick, brickTint, 0, false, i, brickCount, 0.55f, 1.05f, 2.2f);
+                CreateWindowDecal("Shaft Brick " + slot, brick, brickTint, 0, false, slot, centreBands, 0.55f, 0.9f, 2.2f, xLane: slot % 3);
             }
 
             const int wallBrickCount = 8;
@@ -718,7 +725,7 @@ namespace PlummetEditor
             }
         }
 
-        private static void CreateWindowDecal(string name, Sprite sprite, Color tint, int sortingOrder, bool onWall, int slot, int count, float minScale, float maxScale, float centreXRange, float wallXMin = 2.7f, float wallXMax = 3.05f)
+        private static void CreateWindowDecal(string name, Sprite sprite, Color tint, int sortingOrder, bool onWall, int slot, int count, float minScale, float maxScale, float centreXRange, float wallXMin = 2.7f, float wallXMax = 3.05f, int xLane = -1)
         {
             if (sprite == null)
             {
@@ -742,6 +749,10 @@ namespace PlummetEditor
             SetInt(decal, "count", count);
             SetFloat(decal, "wallXMin", wallXMin);
             SetFloat(decal, "wallXMax", wallXMax);
+            SetInt(decal, "xLane", xLane);
+            // Centre decals share one sparse lattice; a bigger backstop gap keeps even
+            // adjacent-band neighbours (window vs brick) from ever touching.
+            SetFloat(decal, "minVerticalGap", onWall ? 1.4f : 1.8f);
         }
 
         private static GameObject CreatePortraitUiRoot(Transform parent)

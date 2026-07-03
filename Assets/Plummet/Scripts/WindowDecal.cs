@@ -29,6 +29,8 @@ namespace Plummet
         [SerializeField] private int slot;
         [Tooltip("Number of decals sharing this loop span (number of bands).")]
         [SerializeField] private int count = 7;
+        [Tooltip("Centre decals only: x-lane index (0..2 = left/centre/right third of the shaft, jittered within the lane) so centre decals never stack in a column. -1 = fully random x.")]
+        [SerializeField] private int xLane = -1;
         [Tooltip("Minimum vertical gap kept between neighbouring windows (backstop via the jitter margin).")]
         [SerializeField] private float minVerticalGap = 1.4f;
 
@@ -90,6 +92,14 @@ namespace Plummet
                 // on the wall stays random for variation.
                 int side = (slot % 2 == 0) ? -1 : 1;
                 currentX = side * Random.Range(wallXMin, wallXMax);
+            }
+            else if (xLane >= 0)
+            {
+                // Stratified x: this decal owns one of three lanes across the shaft and
+                // only jitters within it, so centre decals never stack in a column.
+                float laneWidth = 2f * centreXRange / 3f;
+                float laneLeft = -centreXRange + xLane * laneWidth;
+                currentX = laneLeft + Random.Range(0.15f, 0.85f) * laneWidth;
             }
             else
             {
