@@ -1148,10 +1148,16 @@ namespace PlummetEditor
         private static void AddKidSkin(System.Collections.Generic.List<Skin> skins, string id, string displayName)
         {
             Sprite sprite = LoadSkinSprite(id);
-            if (sprite != null)
+            if (sprite == null)
             {
-                skins.Add(new Skin(id, displayName, sprite, new[] { sprite }, LoadDiveFrames(id)));
+                return;
             }
+
+            // The dive sequences start from a standing pose, so frame 1 doubles as the
+            // home-screen/picker standing sprite; the single-pose art stays the fall loop.
+            Sprite[] diveFrames = LoadDiveFrames(id);
+            Sprite standing = diveFrames != null ? diveFrames[0] : sprite;
+            skins.Add(new Skin(id, displayName, standing, new[] { sprite }, diveFrames));
         }
 
         private static Sprite LoadSkinSprite(string id)
@@ -1159,23 +1165,32 @@ namespace PlummetEditor
             return AssetDatabase.LoadAssetAtPath<Sprite>($"{GamePath}skins/{id}.png");
         }
 
-        // One-shot trapdoor-drop dive: skins/<id>-backflip-01.png onward (Evie has 01..08).
-        // Skins without these frames keep the procedural tip-and-recover dive.
+        // One-shot trapdoor-drop dive: skins/<id>-backflip-01.png onward (Evie, 01..08)
+        // or skins/<id>-dive-01.png onward (Harrison, 01..09). Skins without these
+        // frames keep the procedural tip-and-recover dive.
         private static Sprite[] LoadDiveFrames(string id)
         {
-            var frames = new System.Collections.Generic.List<Sprite>();
-            for (int i = 1; ; i++)
+            foreach (string suffix in new[] { "backflip", "dive" })
             {
-                Sprite frame = AssetDatabase.LoadAssetAtPath<Sprite>($"{GamePath}skins/{id}-backflip-{i:00}.png");
-                if (frame == null)
+                var frames = new System.Collections.Generic.List<Sprite>();
+                for (int i = 1; ; i++)
                 {
-                    break;
+                    Sprite frame = AssetDatabase.LoadAssetAtPath<Sprite>($"{GamePath}skins/{id}-{suffix}-{i:00}.png");
+                    if (frame == null)
+                    {
+                        break;
+                    }
+
+                    frames.Add(frame);
                 }
 
-                frames.Add(frame);
+                if (frames.Count > 0)
+                {
+                    return frames.ToArray();
+                }
             }
 
-            return frames.Count > 0 ? frames.ToArray() : null;
+            return null;
         }
 
         [MenuItem("Plummet/Skins/Process Dropped Art")]
