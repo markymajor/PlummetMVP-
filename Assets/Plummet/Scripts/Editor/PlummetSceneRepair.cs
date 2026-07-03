@@ -1168,11 +1168,15 @@ namespace PlummetEditor
                 return;
             }
 
-            // The dive sequences start from a standing pose, so frame 1 doubles as the
-            // home-screen/picker standing sprite; the single-pose art stays the fall loop.
+            // The dive sequences start standing and end mid-fall, so frame 1 doubles as
+            // the home-screen/picker standing sprite and the LAST frame as the falling
+            // loop. That keeps the drop->run handoff pop-free (same art) and sizes the
+            // faller consistently (the old evie/harrison falling art is a much wider
+            // aspect than the dive frames). Skins without dive frames keep their art.
             Sprite[] diveFrames = LoadDiveFrames(id);
             Sprite standing = diveFrames != null ? diveFrames[0] : sprite;
-            skins.Add(new Skin(id, displayName, standing, new[] { sprite }, diveFrames));
+            Sprite falling = diveFrames != null ? diveFrames[diveFrames.Length - 1] : sprite;
+            skins.Add(new Skin(id, displayName, standing, new[] { falling }, diveFrames));
         }
 
         private static Sprite LoadSkinSprite(string id)
