@@ -665,7 +665,7 @@ namespace PlummetEditor
         {
             foreach (Transform t in Object.FindObjectsByType<Transform>(FindObjectsSortMode.None))
             {
-                if (t != null && (t.name.StartsWith("Wall Window") || t.name.StartsWith("Shaft Bg Window") || t.name.StartsWith("Shaft Brick")))
+                if (t != null && (t.name.StartsWith("Wall Window") || t.name.StartsWith("Shaft Bg Window") || t.name.StartsWith("Shaft Brick") || t.name.StartsWith("Wall Brick Decal")))
                 {
                     Object.DestroyImmediate(t.gameObject);
                 }
@@ -681,10 +681,15 @@ namespace PlummetEditor
             // (N = window count) and window i owns band i, so the windows stay spread top-to-
             // bottom and never clump; each re-randomises only within its own band on loop.
             Color litTint = new Color(1f, 0.82f, 0.5f, 1f);
-            Color bgTint = new Color(0.72f, 0.80f, 0.84f, 0.16f);
+            // Darker-teal arched silhouettes behind the player, clearly visible like the OG.
+            Color bgTint = new Color(0.32f, 0.48f, 0.51f, 0.6f);
             // Brick decals across the shaft play area: a slightly darker teal than the shaft
             // (ShaftColor 0.42/0.61/0.63), faint, behind everything, for subtle texture.
             Color brickTint = new Color(0.30f, 0.47f, 0.49f, 0.5f);
+            // Lighter brick clusters scattered in the navy wall fill, like the OG rubble
+            // decals. White alpha-mask art so this tint IS the brick colour (the original
+            // Briks_* sprites are darker than the wall and can't be lightened by tinting).
+            Color wallBrickTint = new Color(0.16f, 0.36f, 0.44f, 1f);
 
             const int litCount = 7;
             for (int i = 0; i < litCount; i++)
@@ -692,7 +697,7 @@ namespace PlummetEditor
                 CreateWindowDecal("Wall Window " + i, litWindow, litTint, 6, true, i, litCount, 0.45f, 0.62f, 0f);
             }
 
-            const int bgCount = 3;
+            const int bgCount = 4;
             for (int i = 0; i < bgCount; i++)
             {
                 CreateWindowDecal("Shaft Bg Window " + i, bgWindow, bgTint, 1, false, i, bgCount, 0.7f, 0.95f, 1.2f);
@@ -703,9 +708,17 @@ namespace PlummetEditor
             {
                 CreateWindowDecal("Shaft Brick " + i, brick, brickTint, 0, false, i, brickCount, 0.55f, 1.05f, 2.2f);
             }
+
+            const int wallBrickCount = 8;
+            for (int i = 0; i < wallBrickCount; i++)
+            {
+                Sprite cluster = LoadGameSprite($"Briks_{2 + i % 5:00}-mask.png");
+                // Scatter across more of the wall depth than the lit windows (2.7..3.05).
+                CreateWindowDecal("Wall Brick Decal " + i, cluster, wallBrickTint, 3, true, i, wallBrickCount, 0.5f, 0.8f, 0f, 2.6f, 3.7f);
+            }
         }
 
-        private static void CreateWindowDecal(string name, Sprite sprite, Color tint, int sortingOrder, bool onWall, int slot, int count, float minScale, float maxScale, float centreXRange)
+        private static void CreateWindowDecal(string name, Sprite sprite, Color tint, int sortingOrder, bool onWall, int slot, int count, float minScale, float maxScale, float centreXRange, float wallXMin = 2.7f, float wallXMax = 3.05f)
         {
             if (sprite == null)
             {
@@ -727,6 +740,8 @@ namespace PlummetEditor
             SetFloat(decal, "centreXRange", centreXRange);
             SetInt(decal, "slot", slot);
             SetInt(decal, "count", count);
+            SetFloat(decal, "wallXMin", wallXMin);
+            SetFloat(decal, "wallXMax", wallXMax);
         }
 
         private static GameObject CreatePortraitUiRoot(Transform parent)

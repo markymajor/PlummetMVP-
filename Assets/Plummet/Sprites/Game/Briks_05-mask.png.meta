@@ -1,0 +1,520 @@
+fileFormatVersion: 2
+guid: a655f2518c2054cf7bbf37786ddb35b1
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: 7981479275741099025
+    second: Briks_05-mask_0
+  - first:
+      213: -9160304153918946236
+    second: Briks_05-mask_1
+  - first:
+      213: 8775193431123161386
+    second: Briks_05-mask_2
+  - first:
+      213: 4328502003289502958
+    second: Briks_05-mask_3
+  - first:
+      213: 5417925588983599023
+    second: Briks_05-mask_4
+  - first:
+      213: 5905272259549372281
+    second: Briks_05-mask_5
+  - first:
+      213: -2212279076669442622
+    second: Briks_05-mask_6
+  - first:
+      213: 192927788581847860
+    second: Briks_05-mask_7
+  - first:
+      213: 653472530943141508
+    second: Briks_05-mask_8
+  - first:
+      213: -4419103928351252698
+    second: Briks_05-mask_9
+  - first:
+      213: 5148473473840145493
+    second: Briks_05-mask_10
+  - first:
+      213: 4783510699176934328
+    second: Briks_05-mask_11
+  - first:
+      213: -6842211127518546434
+    second: Briks_05-mask_12
+  - first:
+      213: -656569000704462691
+    second: Briks_05-mask_13
+  - first:
+      213: 5508909274095589276
+    second: Briks_05-mask_14
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 0
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 1
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: Briks_05-mask_0
+      rect:
+        serializedVersion: 2
+        x: 20
+        y: 122
+        width: 46
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 114b0b41d19e3ce60800000000000000
+      internalID: 7981479275741099025
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Briks_05-mask_1
+      rect:
+        serializedVersion: 2
+        x: 48
+        y: 149
+        width: 46
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4444027c7ef00e080800000000000000
+      internalID: -9160304153918946236
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Briks_05-mask_2
+      rect:
+        serializedVersion: 2
+        x: 96
+        y: 148
+        width: 46
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a21ff61ceefb7c970800000000000000
+      internalID: 8775193431123161386
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Briks_05-mask_3
+      rect:
+        serializedVersion: 2
+        x: 68
+        y: 121
+        width: 46
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ee433ab73ade11c30800000000000000
+      internalID: 4328502003289502958
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Briks_05-mask_4
+      rect:
+        serializedVersion: 2
+        x: 118
+        y: 121
+        width: 46
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fafcdd62e96503b40800000000000000
+      internalID: 5417925588983599023
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Briks_05-mask_5
+      rect:
+        serializedVersion: 2
+        x: 52
+        y: 93
+        width: 46
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 97f986425ddb3f150800000000000000
+      internalID: 5905272259549372281
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Briks_05-mask_6
+      rect:
+        serializedVersion: 2
+        x: 101
+        y: 92
+        width: 46
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2c5b613a6e76c41e0800000000000000
+      internalID: -2212279076669442622
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Briks_05-mask_7
+      rect:
+        serializedVersion: 2
+        x: 149
+        y: 92
+        width: 46
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 43309b13dca6da200800000000000000
+      internalID: 192927788581847860
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Briks_05-mask_8
+      rect:
+        serializedVersion: 2
+        x: 4
+        y: 63
+        width: 46
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 486675dfdc9911900800000000000000
+      internalID: 653472530943141508
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Briks_05-mask_9
+      rect:
+        serializedVersion: 2
+        x: 54
+        y: 63
+        width: 46
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 62f171df3603ca2c0800000000000000
+      internalID: -4419103928351252698
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Briks_05-mask_10
+      rect:
+        serializedVersion: 2
+        x: 34
+        y: 34
+        width: 46
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 55463cfb85d037740800000000000000
+      internalID: 5148473473840145493
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Briks_05-mask_11
+      rect:
+        serializedVersion: 2
+        x: 83
+        y: 34
+        width: 46
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8bbb8b303a1726240800000000000000
+      internalID: 4783510699176934328
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Briks_05-mask_12
+      rect:
+        serializedVersion: 2
+        x: 16
+        y: 5
+        width: 46
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ef5380a2b359b01a0800000000000000
+      internalID: -6842211127518546434
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Briks_05-mask_13
+      rect:
+        serializedVersion: 2
+        x: 65
+        y: 4
+        width: 46
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d903a76f8f563e6f0800000000000000
+      internalID: -656569000704462691
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Briks_05-mask_14
+      rect:
+        serializedVersion: 2
+        x: 114
+        y: 4
+        width: 46
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c97925e1cc3937c40800000000000000
+      internalID: 5508909274095589276
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 5e97eb03825dee720800000000000000
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      Briks_05-mask_0: 7981479275741099025
+      Briks_05-mask_1: -9160304153918946236
+      Briks_05-mask_10: 5148473473840145493
+      Briks_05-mask_11: 4783510699176934328
+      Briks_05-mask_12: -6842211127518546434
+      Briks_05-mask_13: -656569000704462691
+      Briks_05-mask_14: 5508909274095589276
+      Briks_05-mask_2: 8775193431123161386
+      Briks_05-mask_3: 4328502003289502958
+      Briks_05-mask_4: 5417925588983599023
+      Briks_05-mask_5: 5905272259549372281
+      Briks_05-mask_6: -2212279076669442622
+      Briks_05-mask_7: 192927788581847860
+      Briks_05-mask_8: 653472530943141508
+      Briks_05-mask_9: -4419103928351252698
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
