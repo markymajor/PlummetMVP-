@@ -45,6 +45,8 @@ namespace Plummet
         [SerializeField] private float liningTile = 0.42f;
         [Tooltip("Mortar gap (world units) left between stacked lining bricks so they read as individual bricks, not a continuous strip.")]
         [SerializeField] private float liningGap = 0.14f;
+        [Tooltip("Max distance a lining brick may jut past the wall edge into the shaft, like the OG art. Staggered per brick. COSMETIC ONLY: the lethal collider stays on the smooth wall edge, so brushing a jutting brick tip is forgiven.")]
+        [SerializeField] private float liningJutMax = 0.1f;
         [SerializeField] private Color liningColor = new Color(0.16f, 0.41f, 0.43f, 1f);
         [Tooltip("World size of one mottled brick tile across the wall fill.")]
         [SerializeField] private float wallTile = 1.6f;
@@ -177,6 +179,7 @@ namespace Plummet
             LiningWidth = liningWidth,
             LiningTile = Mathf.Max(0.1f, liningTile),
             LiningGap = Mathf.Max(0f, liningGap),
+            LiningJutMax = Mathf.Max(0f, liningJutMax),
             Amplitude = edgeNoiseAmplitude,
             NoiseScale = edgeNoiseScale,
             Subdivisions = Mathf.Max(2, edgeSubdivisions)
@@ -354,6 +357,7 @@ namespace Plummet
             public float LiningWidth;
             public float LiningTile;
             public float LiningGap;
+            public float LiningJutMax;
             public float Amplitude;
             public float NoiseScale;
             public int Subdivisions;
@@ -596,9 +600,15 @@ namespace Plummet
                     float y1 = Mathf.Min(height, y0 + brickH);
                     float ix0 = LiningInnerX(y0, side, bottomInner, topInner, bottomWidth, topWidth, height, noiseStart, seed, style);
                     float ix1 = LiningInnerX(y1, side, bottomInner, topInner, bottomWidth, topWidth, height, noiseStart, seed, style);
-                    // Brick runs from the inner edge INTO the wall, shaft-facing face at innerX.
-                    float bx0 = ix0 + side * liningWidth;
-                    float bx1 = ix1 + side * liningWidth;
+                    // Stagger each brick slightly past the wall edge into the shaft, like the
+                    // OG art. COSMETIC: the lethal collider stays on the smooth edge (BuildWall),
+                    // so brushing a jutting brick tip is forgiven, never a surprise death.
+                    float jut = BrickJut(noiseStart + y0, seed, style.LiningJutMax);
+                    ix0 -= side * jut;
+                    ix1 -= side * jut;
+                    // Brick runs from its (jutted) face INTO the wall.
+                    float bx0 = ix0 + side * (liningWidth + jut);
+                    float bx1 = ix1 + side * (liningWidth + jut);
 
                     int vb = k * 4;
                     verts[vb + 0] = new Vector3(ix0, y0, 0f);
@@ -624,6 +634,21 @@ namespace Plummet
                 mesh.triangles = tris;
                 mesh.uv = uv;
                 mesh.RecalculateBounds();
+            }
+
+            // Deterministic per-brick overhang in [0, jutMax]: hashed from the brick's world
+            // position so it is stable across segment recycling, and biased so most bricks sit
+            // near flush with only some jutting visibly (staggered, not a uniform shelf).
+            private static float BrickJut(float worldY, float seed, float jutMax)
+            {
+                if (jutMax <= 0f)
+                {
+                    return 0f;
+                }
+
+                float h = Mathf.Sin(worldY * 12.9898f + seed * 78.233f) * 43758.5453f;
+                h -= Mathf.Floor(h);
+                return h * h * jutMax;
             }
 
             private static float LiningInnerX(float localY, int side, float bottomInner, float topInner, float bottomWidth, float topWidth, float height, float noiseStart, float seed, WallStyle style)
