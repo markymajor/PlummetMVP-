@@ -195,8 +195,11 @@ namespace Plummet
             }
         }
 
-        // Size a rect so a preserve-aspect sprite renders at a fixed height regardless of
-        // the art's aspect ratio (width follows the sprite's aspect).
+        // Size a rect so the sprite's VISIBLE (opaque) body renders at the target height.
+        // The target represents visible body height (it mirrors the world player's
+        // normalized size), but the Image draws the full quad — so scale the rect up by
+        // fullQuad/visible from the tight sprite mesh, keeping the quad aspect for width.
+        // Then the standing home character and the in-shaft player match exactly.
         private static void SizeToHeight(RectTransform rect, Sprite sprite, float height)
         {
             if (rect == null || sprite == null || sprite.rect.height <= 0f)
@@ -204,8 +207,12 @@ namespace Plummet
                 return;
             }
 
+            float quadHeight = sprite.rect.height / Mathf.Max(1f, sprite.pixelsPerUnit);
+            float visibleHeight = PlayerController.VisibleSpriteHeight(sprite);
+            float rectHeight = visibleHeight > 0.0001f ? height * (quadHeight / visibleHeight) : height;
+
             float aspect = sprite.rect.width / sprite.rect.height;
-            rect.sizeDelta = new Vector2(height * aspect, height);
+            rect.sizeDelta = new Vector2(rectHeight * aspect, rectHeight);
         }
 
         public void BeginStartFlow()

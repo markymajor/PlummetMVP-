@@ -41,6 +41,13 @@ namespace Plummet
         private bool dropSwapped;
         private Sprite[] diveFrames;
         private int currentDiveFrame = -1;
+        // One scale per skin, anchored to the falling reference frame and held constant
+        // across all dive + fall frames (frames within a set are drawn consistently, so a
+        // constant scale is correct; per-frame re-normalizing made the character pulse).
+        private float skinScale = 1f;
+        // Standing poses are separately normalized so every skin stands at the same height
+        // on the home screen; the drop eases from this to skinScale (see ApplyDropPose).
+        private float standingScale = 1f;
 
         private Collider2D bodyCollider;
 
@@ -90,33 +97,51 @@ namespace Plummet
             Sprite first = GetFirstFallingFrame();
             defaultSprite = skin.Standing != null ? skin.Standing : (first != null ? first : defaultSprite);
 
+            // Anchor the skin's ONE scale to the falling reference frame (for dive skins
+            // that is also the last dive frame), and fit the collider once from it.
+            Sprite reference = first != null ? first : defaultSprite;
+            skinScale = ComputeSkinScale(reference);
+            transform.localScale = new Vector3(skinScale, skinScale, 1f);
+            FitColliderToBody(reference);
+
             if (spriteRenderer != null)
             {
-                spriteRenderer.sprite = first != null ? first : defaultSprite;
-                NormalizeSkinScale(spriteRenderer.sprite);
+                spriteRenderer.sprite = reference;
             }
 
             currentFallingFrame = -1;
         }
 
         /// <summary>
-        /// Scale the player so the sprite's VISIBLE (non-transparent) height matches a
-        /// consistent target, so skins read at the same on-screen size regardless of how
-        /// much transparent padding their art has (e.g. Mark's flail frames are ~56% of
-        /// their quad, Evie/Harrison fill theirs). scale = targetHeight / visible height.
+        /// Scale that makes a sprite's VISIBLE (non-transparent) height match the target,
+        /// so skins read at the same on-screen size regardless of how much transparent
+        /// padding their art has. Computed once per skin from its reference frame.
         /// </summary>
-        private void NormalizeSkinScale(Sprite sprite)
+        private float ComputeSkinScale(Sprite sprite)
         {
             float visibleHeight = VisibleSpriteHeight(sprite);
             if (visibleHeight <= 0.0001f)
             {
+                return skinScale;
+            }
+
+            return skinTargetHeight / visibleHeight;
+        }
+
+        // Standing poses are normalized to their own visible height so every skin stands
+        // at the same height on the home screen (a standing pose's bbox is much taller
+        // than the same character's fall pose, so the constant set scale can't be reused).
+        private void ApplyStandingScale()
+        {
+            float visibleHeight = VisibleSpriteHeight(standingSprite);
+            if (visibleHeight <= 0.0001f)
+            {
+                standingScale = skinScale;
                 return;
             }
 
-            float scale = skinTargetHeight / visibleHeight;
-            transform.localScale = new Vector3(scale, scale, 1f);
-
-            FitColliderToBody(sprite);
+            standingScale = skinTargetHeight / visibleHeight;
+            transform.localScale = new Vector3(standingScale, standingScale, 1f);
         }
 
         /// <summary>
@@ -188,7 +213,7 @@ namespace Plummet
         /// (which hugs the non-transparent area) so transparent padding is excluded;
         /// falls back to the full bounds if a tight mesh isn't available.
         /// </summary>
-        private static float VisibleSpriteHeight(Sprite sprite)
+        internal static float VisibleSpriteHeight(Sprite sprite)
         {
             if (sprite == null)
             {
@@ -262,7 +287,6 @@ namespace Plummet
             if (spriteRenderer != null)
             {
                 spriteRenderer.sprite = GetFirstFallingFrame() != null ? GetFirstFallingFrame() : defaultSprite;
-                NormalizeSkinScale(spriteRenderer.sprite);
             }
         }
 
@@ -283,7 +307,7 @@ namespace Plummet
             if (spriteRenderer != null && standingSprite != null)
             {
                 spriteRenderer.sprite = standingSprite;
-                NormalizeSkinScale(standingSprite);
+                ApplyStandingScale();
             }
         }
 
@@ -296,7 +320,7 @@ namespace Plummet
             if (spriteRenderer != null && standingSprite != null)
             {
                 spriteRenderer.sprite = standingSprite;
-                NormalizeSkinScale(standingSprite);
+                ApplyStandingScale();
             }
         }
 
@@ -327,6 +351,11 @@ namespace Plummet
             if (diveFrames != null && diveFrames.Length > 0)
             {
                 transform.rotation = Quaternion.identity;
+                // Ease from the standing-normalized scale to the constant set scale over
+                // the early drop (settled by 60% progress, masked by the tumble). From
+                // there the scale is constant through the fall: no pulsing, no handoff pop.
+                float s = Mathf.Lerp(standingScale, skinScale, Mathf.Clamp01(progress / 0.6f));
+                transform.localScale = new Vector3(s, s, 1f);
                 AnimateDiveFrame(progress);
                 return;
             }
@@ -368,7 +397,6 @@ namespace Plummet
 
             currentDiveFrame = frameIndex;
             spriteRenderer.sprite = diveFrames[frameIndex];
-            NormalizeSkinScale(diveFrames[frameIndex]);
         }
 
         private void SwapToFallingFrame()
@@ -377,7 +405,9 @@ namespace Plummet
             if (spriteRenderer != null && first != null)
             {
                 spriteRenderer.sprite = first;
-                NormalizeSkinScale(first);
+                // Back to the constant fall scale (a no-op for dive skins; returns Mark
+                // from his separately-normalized standing pose).
+                transform.localScale = new Vector3(skinScale, skinScale, 1f);
             }
         }
 
