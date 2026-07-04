@@ -164,9 +164,6 @@ namespace Plummet
 
             rider.Init(pathManager, side, protrusion, lane, releaseY);
 
-            float offset = Mathf.Max(0f, protrusion - Mathf.Max(0f, maxReach));
-            obstacle.transform.position = new Vector3(edgeX + side * offset, spawnY, 0f);
-
             lastSide = side;
             lastSpawnElapsed = elapsed;
         }

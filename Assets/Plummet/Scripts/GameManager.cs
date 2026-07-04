@@ -22,8 +22,6 @@ namespace Plummet
         [SerializeField] private float baseScrollSpeed = 5.5f;
         [SerializeField] private float maxScrollSpeed = 12f;
         [SerializeField] private float speedIncreasePerSecond = 0.06f;
-        [Tooltip("Gentle scroll speed used on the home/attract screen so the shaft is alive behind the menu before the run begins.")]
-        [SerializeField] private float attractScrollSpeed = 2.5f;
         [Tooltip("Gravity for the trapdoor drop: the scroll accelerates from 0 at this rate (world units/s^2) until it reaches baseScrollSpeed, at which point the run begins. So the home->run transition is one continuous accelerating fall.")]
         [SerializeField] private float dropAcceleration = 8f;
         [Tooltip("Brief forgiving window at the start of each run: the corridor stays centered and wide, difficulty doesn't ramp, and no obstacles spawn, so the trapdoor drop never lands straight into a hazard.")]

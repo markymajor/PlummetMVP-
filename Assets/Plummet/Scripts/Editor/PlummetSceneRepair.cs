@@ -196,7 +196,6 @@ namespace PlummetEditor
             SetFloat(gameManager, "baseScrollSpeed", 5.5f);
             SetFloat(gameManager, "maxScrollSpeed", 12f);
             SetFloat(gameManager, "speedIncreasePerSecond", 0.06f);
-            SetFloat(gameManager, "attractScrollSpeed", 2.5f);
 
             if (spawner != null && pool != null)
             {
