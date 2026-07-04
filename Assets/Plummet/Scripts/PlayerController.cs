@@ -213,7 +213,7 @@ namespace Plummet
         /// (which hugs the non-transparent area) so transparent padding is excluded;
         /// falls back to the full bounds if a tight mesh isn't available.
         /// </summary>
-        internal static float VisibleSpriteHeight(Sprite sprite)
+        private static float VisibleSpriteHeight(Sprite sprite)
         {
             if (sprite == null)
             {

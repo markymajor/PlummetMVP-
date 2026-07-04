@@ -22,14 +22,11 @@ namespace Plummet
         [SerializeField] private Button resetButton;
         [SerializeField] private Button homeButton;
         [SerializeField] private Button shareButton;
-        [SerializeField] private IntroTransition introTransition;
         [SerializeField] private GameObject chooseSkinPanel;
         [SerializeField] private Button chooseSkinButton;
         [SerializeField] private Button chooseSkinBackButton;
         [SerializeField] private Button chooseSkinSelectButton;
         [SerializeField] private SkinPickerUI skinPicker;
-        [Tooltip("The standing character on the Start Panel (also the trapdoor falling actor). Re-skinned to the selected character.")]
-        [SerializeField] private Image startCharacterImage;
 
         private bool shouldShowOpeningInstructions = true;
         private bool showingOpeningInstructions;
@@ -126,93 +123,6 @@ namespace Plummet
             SetInstructionPanels(false, false);
             hudPanel.SetActive(false);
             gameOverPanel.SetActive(false);
-            RefreshStartCharacterSkin();
-
-            if (introTransition != null)
-            {
-                introTransition.ResetIntro();
-            }
-        }
-
-        /// <summary>
-        /// Shows the selected character on the standing start preview (which is also
-        /// the trapdoor falling actor), so the kid's pick is the one standing on the
-        /// land and dropping through. Safe to call before a library exists.
-        /// </summary>
-        // On-screen pixel height for the standing/falling start character, derived from the
-        // gameplay player's canonical world height projected through the game camera, so the
-        // home character and the in-shaft player render at exactly the same size (no pop).
-        private float StartCharacterHeight()
-        {
-            float worldHeight = 1.66f;
-            PlayerController player = FindFirstObjectByType<PlayerController>();
-            if (player != null)
-            {
-                worldHeight = player.CanonicalVisibleHeight;
-            }
-
-            Camera cam = Camera.main;
-            float ortho = cam != null && cam.orthographic ? cam.orthographicSize : 5.5f;
-
-            float referenceHeight = 1920f;
-            CanvasScaler scaler = GetComponentInParent<CanvasScaler>();
-            if (scaler == null)
-            {
-                scaler = FindFirstObjectByType<CanvasScaler>();
-            }
-
-            if (scaler != null && scaler.referenceResolution.y > 0f)
-            {
-                referenceHeight = scaler.referenceResolution.y;
-            }
-
-            // world height as a fraction of the camera's view height, times the UI ref height.
-            return worldHeight / (2f * ortho) * referenceHeight;
-        }
-
-        public void RefreshStartCharacterSkin()
-        {
-            if (startCharacterImage == null || SkinLibrary.Instance == null)
-            {
-                return;
-            }
-
-            Skin skin = SkinLibrary.Instance.Selected;
-            if (skin == null || skin.Standing == null)
-            {
-                return;
-            }
-
-            startCharacterImage.sprite = skin.Standing;
-            startCharacterImage.preserveAspect = true;
-            SizeToHeight(startCharacterImage.rectTransform, skin.Standing, StartCharacterHeight());
-
-            // Keep the trapdoor falling actor on this skin's falling pose, so the drop
-            // shows the chosen character at the same normalized size.
-            if (introTransition != null)
-            {
-                introTransition.SetFallingSprite(skin.FirstFrame != null ? skin.FirstFrame : skin.Standing);
-            }
-        }
-
-        // Size a rect so the sprite's VISIBLE (opaque) body renders at the target height.
-        // The target represents visible body height (it mirrors the world player's
-        // normalized size), but the Image draws the full quad — so scale the rect up by
-        // fullQuad/visible from the tight sprite mesh, keeping the quad aspect for width.
-        // Then the standing home character and the in-shaft player match exactly.
-        private static void SizeToHeight(RectTransform rect, Sprite sprite, float height)
-        {
-            if (rect == null || sprite == null || sprite.rect.height <= 0f)
-            {
-                return;
-            }
-
-            float quadHeight = sprite.rect.height / Mathf.Max(1f, sprite.pixelsPerUnit);
-            float visibleHeight = PlayerController.VisibleSpriteHeight(sprite);
-            float rectHeight = visibleHeight > 0.0001f ? height * (quadHeight / visibleHeight) : height;
-
-            float aspect = sprite.rect.width / sprite.rect.height;
-            rect.sizeDelta = new Vector2(rectHeight * aspect, rectHeight);
         }
 
         public void BeginStartFlow()

@@ -139,7 +139,9 @@ namespace Plummet
 
             if (player != null)
             {
-                player.ApplySelectedSkin();
+                // Standing pose, not just the raw skin swap: the pick returns to the home
+                // screen, where the player stands on the trapdoor in the standing sprite.
+                player.ShowStanding();
             }
         }
 

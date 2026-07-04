@@ -33,6 +33,7 @@ namespace PlummetEditor
 
             AssetDatabase.Refresh();
             ConfigureSprites();
+            RemoveDeadStartUi();
 
             PlayerController player = Object.FindFirstObjectByType<PlayerController>();
             ObstacleSpawner spawner = Object.FindFirstObjectByType<ObstacleSpawner>();
@@ -555,6 +556,28 @@ namespace PlummetEditor
 
             renderer.color = new Color(0.02f, 0.23f, 0.27f, 0.92f);
             EditorUtility.SetDirty(renderer);
+        }
+
+        // Removes the retired UI start-character system: the old canvas trapdoor and
+        // standing-actor objects (IntroTransition owned them; the drop is played by the
+        // real world player now) plus any components whose scripts no longer exist.
+        private static void RemoveDeadStartUi()
+        {
+            foreach (Transform t in Object.FindObjectsByType<Transform>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            {
+                if (t != null && (t.name == "Trapdoor" || t.name == "Standing Mark"))
+                {
+                    Object.DestroyImmediate(t.gameObject);
+                }
+            }
+
+            foreach (Transform t in Object.FindObjectsByType<Transform>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            {
+                if (t != null)
+                {
+                    GameObjectUtility.RemoveMonoBehavioursWithMissingScript(t.gameObject);
+                }
+            }
         }
 
         // The home surface (sky/skyline/ledge) as world sprites behind the player, parented
