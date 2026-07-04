@@ -600,6 +600,15 @@ namespace PlummetEditor
             AddSurfaceBand(root.transform, "Surface Floor Left", slab, -(gapHalf + floorEdge) * 0.5f, floorY, sideW, floorH, 11, floorColor);
             AddSurfaceBand(root.transform, "Surface Floor Right", slab, (gapHalf + floorEdge) * 0.5f, floorY, sideW, floorH, 11, floorColor);
 
+            // Trapdoor doors covering the mouth, hinged at its outer edges; TrapdoorDoors
+            // swings them down into the shaft when the drop begins. Slightly darker than
+            // the street so the hatch reads even when closed.
+            Color doorColor = new Color(0.72f, 0.74f, 0.74f, 1f);
+            Transform leftDoor = AddTrapdoorDoor(root.transform, "Trapdoor Door Left", slab, -gapHalf, floorLine, gapHalf, floorH, doorColor);
+            Transform rightDoor = AddTrapdoorDoor(root.transform, "Trapdoor Door Right", slab, gapHalf, floorLine, -gapHalf, floorH, doorColor);
+            TrapdoorDoors doors = root.AddComponent<TrapdoorDoors>();
+            doors.Configure(leftDoor, rightDoor);
+
             Scroller scroller = root.AddComponent<Scroller>();
             SetBool(scroller, "loop", false);
             SetFloat(scroller, "recycleY", 99999f);
@@ -625,6 +634,18 @@ namespace PlummetEditor
             SpriteRenderer renderer = go.GetComponent<SpriteRenderer>();
             renderer.sprite = sprite;
             renderer.sortingOrder = sortingOrder;
+        }
+
+        // One trapdoor door: an empty hinge object at the mouth's edge with the door slab
+        // hanging off it toward the centre, so rotating the hinge swings the door.
+        private static Transform AddTrapdoorDoor(Transform parent, string name, Sprite sprite, float hingeX, float hingeY, float extentX, float height, Color color)
+        {
+            GameObject hinge = new GameObject(name);
+            hinge.transform.SetParent(parent, false);
+            hinge.transform.localPosition = new Vector3(hingeX, hingeY, 0f);
+
+            AddSurfaceBand(hinge.transform, name + " Slab", sprite, extentX * 0.5f, -height * 0.5f, Mathf.Abs(extentX), height, 11, color);
+            return hinge.transform;
         }
 
         // A solid colour band (a white sprite tinted) used for the surface floor.
