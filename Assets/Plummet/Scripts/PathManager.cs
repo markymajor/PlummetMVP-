@@ -46,7 +46,7 @@ namespace Plummet
         [Tooltip("Mortar gap (world units) left between stacked lining bricks so they read as individual bricks, not a continuous strip.")]
         [SerializeField] private float liningGap = 0.14f;
         [Tooltip("Max distance a lining brick may jut past the wall edge into the shaft, like the OG art. Staggered per brick. COSMETIC ONLY: the lethal collider stays on the smooth wall edge, so brushing a jutting brick tip is forgiven.")]
-        [SerializeField] private float liningJutMax = 0.1f;
+        [SerializeField] private float liningJutMax = 0.25f;
         [SerializeField] private Color liningColor = new Color(0.16f, 0.41f, 0.43f, 1f);
         [Tooltip("World size of one mottled brick tile across the wall fill.")]
         [SerializeField] private float wallTile = 1.6f;

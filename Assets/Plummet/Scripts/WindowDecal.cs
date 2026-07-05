@@ -42,9 +42,13 @@ namespace Plummet
         private float currentX;
         private float currentScale;
         private int lastCycle;
+        private PathManager path;
+        private SpriteRenderer spriteRenderer;
 
         private void OnEnable()
         {
+            path = FindFirstObjectByType<PathManager>();
+            spriteRenderer = GetComponent<SpriteRenderer>();
             span = Mathf.Max(0.01f, loopTopY - loopBottomY);
             bandHeight = span / Mathf.Max(1, count);
             // Keep jitter inside the band so neighbouring windows never get closer than the
@@ -112,9 +116,29 @@ namespace Plummet
         private void Apply(float arg)
         {
             float y = loopBottomY + (arg - Mathf.Floor(arg / span) * span);
-            transform.position = new Vector3(currentX, y, transform.position.z);
+            float x = onWall ? ClampOutsideCorridor(currentX, y) : currentX;
+            transform.position = new Vector3(x, y, transform.position.z);
             // Flip lit windows on the right wall so they face into the shaft consistently.
             transform.localScale = new Vector3(onWall && currentX > 0f ? -currentScale : currentScale, currentScale, 1f);
+        }
+
+        // Keep wall decals fully INSIDE the wall: push x outward so the decal's near edge
+        // stays behind the corridor's wavy inner edge (base width + noise amplitude) at
+        // this decal's current Y. Without this a wide corridor section can reach past a
+        // decal's random x and the decal pokes into the shaft.
+        private float ClampOutsideCorridor(float x, float y)
+        {
+            if (path == null || !path.TryGetCorridorAt(y, out float center, out float width))
+            {
+                return x;
+            }
+
+            float side = Mathf.Sign(x);
+            float halfWidth = spriteRenderer != null && spriteRenderer.sprite != null
+                ? spriteRenderer.sprite.bounds.extents.x * currentScale
+                : 0.5f;
+            float edge = Mathf.Abs(center + side * (width * 0.5f + path.EdgeAmplitudeForWidth(width)));
+            return side * Mathf.Max(Mathf.Abs(x), edge + halfWidth + 0.05f);
         }
     }
 }

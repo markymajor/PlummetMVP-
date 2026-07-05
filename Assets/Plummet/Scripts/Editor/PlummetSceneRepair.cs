@@ -401,6 +401,9 @@ namespace PlummetEditor
             SetInt(pathManager, "edgeSubdivisions", 10);
             SetFloat(pathManager, "liningWidth", 0.42f);
             SetFloat(pathManager, "liningTile", 0.55f);
+            // Staggered brick overhang past the wall edge (cosmetic; collider stays smooth).
+            // 0.25 tuned live against the OG reference (0.1 was invisible, 0.22 still shy).
+            SetFloat(pathManager, "liningJutMax", 0.25f);
             SetFloat(pathManager, "wallTile", 1.6f);
             SetColor(pathManager, "liningColor", LiningColor);
             pathManager.ResetPath();
@@ -728,43 +731,45 @@ namespace PlummetEditor
             Color bgTint = new Color(0.32f, 0.48f, 0.51f, 0.6f);
             // Brick decals across the shaft play area: a slightly darker teal than the shaft
             // (ShaftColor 0.42/0.61/0.63), faint, behind everything, for subtle texture.
-            Color brickTint = new Color(0.30f, 0.47f, 0.49f, 0.4f);
+            Color brickTint = new Color(0.30f, 0.47f, 0.49f, 0.35f);
             // Lighter brick clusters scattered in the navy wall fill, like the OG rubble
             // decals. White alpha-mask art so this tint IS the brick colour (the original
             // Briks_* sprites are darker than the wall and can't be lightened by tinting).
             Color wallBrickTint = new Color(0.16f, 0.36f, 0.44f, 1f);
 
-            const int litCount = 7;
-            for (int i = 0; i < litCount; i++)
+            // ONE shared lattice per population (OG reads as a few LARGE silhouettes, not
+            // many small ones). WALL decals: 8 bands split between lit windows and brick
+            // clusters, interleaved so each wall alternates window/brick with 2 bands of
+            // spacing per side (side = slot % 2). CENTRE decals: 6 bands, two big faint
+            // windows + two subtle bricks in distinct x-lanes, two bands left empty.
+            const int wallBands = 8;
+            int[] wallWindowSlots = { 0, 1, 4, 5 };
+            foreach (int slot in wallWindowSlots)
             {
-                CreateWindowDecal("Wall Window " + i, litWindow, litTint, 6, true, i, litCount, 0.45f, 0.62f, 0f);
+                CreateWindowDecal("Wall Window " + slot, litWindow, litTint, 6, true, slot, wallBands, 0.6f, 0.8f, 0f);
             }
 
-            // ONE shared lattice for all shaft-centre decals: the loop span is split into
-            // 8 bands allocated across BOTH sets (windows every 4th band, bricks in three
-            // of the rest), so no two centre decals can ever share a Y band. X is
-            // stratified too (slot % 3 -> left/centre/right lane, jittered within it) so
-            // they never stack in a column. Sparse + faint = the OG's occasional-texture
-            // feel rather than a wall of decals.
-            const int centreBands = 8;
-            int[] windowSlots = { 0, 4 };
-            foreach (int slot in windowSlots)
+            int[] wallBrickSlots = { 2, 3, 6, 7 };
+            foreach (int slot in wallBrickSlots)
             {
-                CreateWindowDecal("Shaft Bg Window " + slot, bgWindow, bgTint, 1, false, slot, centreBands, 0.7f, 0.95f, 1.2f, xLane: slot % 3);
+                Sprite cluster = LoadGameSprite($"Briks_{2 + slot % 5:00}-mask.png");
+                // Scatter across more of the wall depth than the lit windows (2.7..3.05);
+                // WindowDecal clamps them outward of the corridor's wavy edge at runtime.
+                CreateWindowDecal("Wall Brick Decal " + slot, cluster, wallBrickTint, 3, true, slot, wallBands, 0.5f, 0.7f, 0f, 2.6f, 3.7f);
             }
 
-            int[] brickSlots = { 2, 3, 7 };
-            foreach (int slot in brickSlots)
+            const int centreBands = 6;
+            int[] centreWindowSlots = { 0, 3 };
+            foreach (int slot in centreWindowSlots)
             {
-                CreateWindowDecal("Shaft Brick " + slot, brick, brickTint, 0, false, slot, centreBands, 0.55f, 0.9f, 2.2f, xLane: slot % 3);
+                CreateWindowDecal("Shaft Bg Window " + slot, bgWindow, bgTint, 1, false, slot, centreBands, 1.1f, 1.35f, 1.2f);
             }
 
-            const int wallBrickCount = 8;
-            for (int i = 0; i < wallBrickCount; i++)
+            int[] centreBrickSlots = { 1, 4 };
+            for (int i = 0; i < centreBrickSlots.Length; i++)
             {
-                Sprite cluster = LoadGameSprite($"Briks_{2 + i % 5:00}-mask.png");
-                // Scatter across more of the wall depth than the lit windows (2.7..3.05).
-                CreateWindowDecal("Wall Brick Decal " + i, cluster, wallBrickTint, 3, true, i, wallBrickCount, 0.5f, 0.8f, 0f, 2.6f, 3.7f);
+                int slot = centreBrickSlots[i];
+                CreateWindowDecal("Shaft Brick " + slot, brick, brickTint, 0, false, slot, centreBands, 0.5f, 0.75f, 2.2f, xLane: i == 0 ? 0 : 2);
             }
         }
 
@@ -794,8 +799,10 @@ namespace PlummetEditor
             SetFloat(decal, "wallXMax", wallXMax);
             SetInt(decal, "xLane", xLane);
             // Centre decals share one sparse lattice; a bigger backstop gap keeps even
-            // adjacent-band neighbours (window vs brick) from ever touching.
-            SetFloat(decal, "minVerticalGap", onWall ? 1.4f : 1.8f);
+            // adjacent-band neighbours (window vs brick) from ever touching, sized for
+            // the bigger round-2 windows. Wall decals alternate sides per band, so
+            // same-side neighbours are already two bands apart.
+            SetFloat(decal, "minVerticalGap", onWall ? 1.4f : 2.4f);
         }
 
         private static GameObject CreatePortraitUiRoot(Transform parent)
