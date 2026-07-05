@@ -124,9 +124,11 @@ namespace PlummetEditor
             Text finalScoreText = AddText(gameOverPanel.transform, "Final Score Text", "0", Anchor(0.5f, 0.63f, 700f, 160f), 96, TextAnchor.MiddleCenter, new Color(1f, 0.47f, 0.18f));
             ApplyScoreStyle(finalScoreText);
             Text finalBestText = AddText(gameOverPanel.transform, "Final Best Text", "Best 0", Anchor(0.5f, 0.555f, 560f, 70f), 38, TextAnchor.MiddleCenter, new Color(1f, 1f, 1f, 0.9f));
-            Button resetButton = AddImageButton(gameOverPanel.transform, "Reset Button", LoadUiSprite("button-reset.png"), Anchor(0.35f, 0.25f, 170f, 170f));
+            // 0.28/0.5/0.72 = ~238px between button centres at 1080 wide, a clear ~68px
+            // gap between the 170px buttons (0.35/0.5/0.65 left them touching).
+            Button resetButton = AddImageButton(gameOverPanel.transform, "Reset Button", LoadUiSprite("button-reset.png"), Anchor(0.28f, 0.25f, 170f, 170f));
             Button homeButton = AddImageButton(gameOverPanel.transform, "Home Button", LoadUiSprite("button-home.png"), Anchor(0.5f, 0.25f, 170f, 170f));
-            Button shareButton = AddImageButton(gameOverPanel.transform, "Share Button", LoadUiSprite("button-share.png"), Anchor(0.65f, 0.25f, 170f, 170f));
+            Button shareButton = AddImageButton(gameOverPanel.transform, "Share Button", LoadUiSprite("button-share.png"), Anchor(0.72f, 0.25f, 170f, 170f));
 
             Set(uiManager, "startPanel", startPanel);
             Set(uiManager, "instructionDistancePanel", instructionDistancePanel);
@@ -753,9 +755,10 @@ namespace PlummetEditor
             foreach (int slot in wallBrickSlots)
             {
                 Sprite cluster = LoadGameSprite($"Briks_{2 + slot % 5:00}-mask.png");
-                // Scatter across more of the wall depth than the lit windows (2.7..3.05);
-                // WindowDecal clamps them outward of the corridor's wavy edge at runtime.
-                CreateWindowDecal("Wall Brick Decal " + slot, cluster, wallBrickTint, 3, true, slot, wallBands, 0.5f, 0.7f, 0f, 2.6f, 3.7f);
+                // Depth-aware: WindowDecal re-places these fully inside the wall band
+                // (behind the lining, inside the screen edge) each cycle, and skips the
+                // cycle entirely when the corridor is too wide to leave room.
+                CreateWindowDecal("Wall Brick Decal " + slot, cluster, wallBrickTint, 3, true, slot, wallBands, 0.65f, 0.85f, 0f, 2.6f, 3.7f, containInWall: true);
             }
 
             const int centreBands = 6;
@@ -773,7 +776,7 @@ namespace PlummetEditor
             }
         }
 
-        private static void CreateWindowDecal(string name, Sprite sprite, Color tint, int sortingOrder, bool onWall, int slot, int count, float minScale, float maxScale, float centreXRange, float wallXMin = 2.7f, float wallXMax = 3.05f, int xLane = -1)
+        private static void CreateWindowDecal(string name, Sprite sprite, Color tint, int sortingOrder, bool onWall, int slot, int count, float minScale, float maxScale, float centreXRange, float wallXMin = 2.7f, float wallXMax = 3.05f, int xLane = -1, bool containInWall = false)
         {
             if (sprite == null)
             {
@@ -798,6 +801,7 @@ namespace PlummetEditor
             SetFloat(decal, "wallXMin", wallXMin);
             SetFloat(decal, "wallXMax", wallXMax);
             SetInt(decal, "xLane", xLane);
+            SetBool(decal, "containInWall", containInWall);
             // Centre decals share one sparse lattice; a bigger backstop gap keeps even
             // adjacent-band neighbours (window vs brick) from ever touching, sized for
             // the bigger round-2 windows. Wall decals alternate sides per band, so

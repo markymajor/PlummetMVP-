@@ -156,6 +156,10 @@ namespace Plummet
             return false;
         }
 
+        /// <summary>World width of the vertical brick lining along the wall edge, for
+        /// decals that must sit fully behind it.</summary>
+        public float LiningWidth => liningWidth;
+
         // Per-wall edge noise amplitude for a given gap width (mirrors the wall mesh).
         public float EdgeAmplitudeForWidth(float width)
         {

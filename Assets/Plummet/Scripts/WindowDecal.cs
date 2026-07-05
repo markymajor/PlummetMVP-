@@ -31,6 +31,10 @@ namespace Plummet
         [SerializeField] private int count = 7;
         [Tooltip("Centre decals only: x-lane index (0..2 = left/centre/right third of the shaft, jittered within the lane) so centre decals never stack in a column. -1 = fully random x.")]
         [SerializeField] private int xLane = -1;
+        [Tooltip("Wall decals only: place fully INSIDE the wall band (behind the vertical lining, inside the screen edge) at respawn, and SKIP the cycle when the wall is too thin at that Y — instead of shrinking, clipping, or poking into the shaft.")]
+        [SerializeField] private bool containInWall;
+        [Tooltip("Clearance kept between a contained decal and both the lining bricks and the screen edge.")]
+        [SerializeField] private float containMargin = 0.15f;
         [Tooltip("Minimum vertical gap kept between neighbouring windows (backstop via the jitter margin).")]
         [SerializeField] private float minVerticalGap = 1.4f;
 
@@ -42,6 +46,7 @@ namespace Plummet
         private float currentX;
         private float currentScale;
         private int lastCycle;
+        private bool visibleThisCycle = true;
         private PathManager path;
         private SpriteRenderer spriteRenderer;
 
@@ -88,6 +93,7 @@ namespace Plummet
         private void Respawn()
         {
             jitter = Random.Range(jitterMargin, Mathf.Max(jitterMargin, bandHeight - jitterMargin));
+            visibleThisCycle = true;
 
             if (onWall)
             {
@@ -96,6 +102,13 @@ namespace Plummet
                 // on the wall stays random for variation.
                 int side = (slot % 2 == 0) ? -1 : 1;
                 currentX = side * Random.Range(wallXMin, wallXMax);
+
+                if (containInWall)
+                {
+                    currentScale = Random.Range(minScale, maxScale);
+                    float y = YFor(slot * bandHeight + jitter + scrollAccum);
+                    visibleThisCycle = TryPlaceInWall(side, y, out currentX);
+                }
             }
             else if (xLane >= 0)
             {
@@ -110,16 +123,76 @@ namespace Plummet
                 currentX = Random.Range(-centreXRange, centreXRange);
             }
 
-            currentScale = Random.Range(minScale, maxScale);
+            if (!containInWall)
+            {
+                currentScale = Random.Range(minScale, maxScale);
+            }
+        }
+
+        private float YFor(float arg)
+        {
+            return loopBottomY + (arg - Mathf.Floor(arg / span) * span);
+        }
+
+        // Contained decals may only spawn where the wall band (wavy inner edge + lining,
+        // out to the screen edge) is deep enough for their FULL width plus clearance; a
+        // too-thin band skips the cycle instead of shrinking or clipping the decal.
+        private bool TryPlaceInWall(int side, float y, out float x)
+        {
+            x = currentX;
+            if (path == null || spriteRenderer == null || spriteRenderer.sprite == null)
+            {
+                return true;
+            }
+
+            float halfWidth = spriteRenderer.sprite.bounds.extents.x * currentScale;
+            float halfHeight = spriteRenderer.sprite.bounds.extents.y * currentScale;
+
+            // The corridor edge shifts across the decal's own height (zig-zag steps +
+            // noise), so take the deepest intrusion over its vertical extent.
+            float edge = 0f;
+            bool sampled = false;
+            for (int i = -1; i <= 1; i++)
+            {
+                if (path.TryGetCorridorAt(y + i * halfHeight, out float center, out float width))
+                {
+                    edge = Mathf.Max(edge, Mathf.Abs(center + side * (width * 0.5f + path.EdgeAmplitudeForWidth(width))));
+                    sampled = true;
+                }
+            }
+
+            if (!sampled)
+            {
+                return true;
+            }
+
+            Camera cam = Camera.main;
+            float screenHalf = cam != null && cam.orthographic ? cam.orthographicSize * cam.aspect : 3.1f;
+            float innerLimit = edge + path.LiningWidth + containMargin;
+            float outerLimit = screenHalf - containMargin;
+            if (outerLimit - innerLimit < halfWidth * 2f)
+            {
+                return false; // wall band too thin at this Y: sit this cycle out.
+            }
+
+            x = side * Random.Range(innerLimit + halfWidth, outerLimit - halfWidth);
+            return true;
         }
 
         private void Apply(float arg)
         {
-            float y = loopBottomY + (arg - Mathf.Floor(arg / span) * span);
-            float x = onWall ? ClampOutsideCorridor(currentX, y) : currentX;
+            float y = YFor(arg);
+            // Contained decals are fully placed (or skipped) at respawn; others get the
+            // outward push as a backstop against poking into the corridor.
+            float x = onWall && !containInWall ? ClampOutsideCorridor(currentX, y) : currentX;
             transform.position = new Vector3(x, y, transform.position.z);
             // Flip lit windows on the right wall so they face into the shaft consistently.
             transform.localScale = new Vector3(onWall && currentX > 0f ? -currentScale : currentScale, currentScale, 1f);
+
+            if (spriteRenderer != null)
+            {
+                spriteRenderer.enabled = visibleThisCycle;
+            }
         }
 
         // Keep wall decals fully INSIDE the wall: push x outward so the decal's near edge
