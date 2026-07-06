@@ -47,6 +47,7 @@ namespace Plummet
         private float currentScale;
         private int lastCycle;
         private bool visibleThisCycle = true;
+        private GameState lastGmState = (GameState)(-1);
         private PathManager path;
         private SpriteRenderer spriteRenderer;
 
@@ -70,7 +71,25 @@ namespace Plummet
         private void Update()
         {
             GameManager gm = GameManager.Instance;
-            if (gm == null || !gm.IsScrolling)
+            if (gm == null)
+            {
+                return;
+            }
+
+            // The corridor is regenerated (ResetPath) when the home screen shows and when
+            // a run starts, invalidating any placement made against the old geometry —
+            // contained decals must re-check their wall band then, not just on wrap.
+            if (gm.State != lastGmState)
+            {
+                lastGmState = gm.State;
+                if (containInWall && (gm.State == GameState.Start || gm.State == GameState.Playing))
+                {
+                    Respawn();
+                    Apply(slot * bandHeight + jitter + scrollAccum);
+                }
+            }
+
+            if (!gm.IsScrolling)
             {
                 return;
             }
@@ -166,16 +185,19 @@ namespace Plummet
                 return true;
             }
 
+            // The decal's INNER edge must always clear the lining; its OUTER side may
+            // crop off-screen like the OG's wall clusters do. So "enough wall" means at
+            // least half the decal fits between lining and screen edge — otherwise skip.
             Camera cam = Camera.main;
             float screenHalf = cam != null && cam.orthographic ? cam.orthographicSize * cam.aspect : 3.1f;
-            float innerLimit = edge + path.LiningWidth + containMargin;
-            float outerLimit = screenHalf - containMargin;
-            if (outerLimit - innerLimit < halfWidth * 2f)
+            float innerMost = edge + path.LiningWidth + containMargin + halfWidth;
+            float outerMost = screenHalf;
+            if (outerMost < innerMost)
             {
                 return false; // wall band too thin at this Y: sit this cycle out.
             }
 
-            x = side * Random.Range(innerLimit + halfWidth, outerLimit - halfWidth);
+            x = side * Random.Range(innerMost, outerMost);
             return true;
         }
 
