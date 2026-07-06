@@ -113,19 +113,52 @@ namespace Plummet
         }
 
         /// <summary>
-        /// Scale that makes a sprite's VISIBLE (non-transparent) height match the target,
-        /// so skins read at the same on-screen size regardless of how much transparent
-        /// padding their art has. Computed once per skin from its reference frame.
+        /// Scale for the falling/dive reference frame: normalizes the visible bbox's
+        /// LONGEST dimension to the target. Fall poses are horizontal, so their bbox
+        /// height is only the body's thickness — normalizing by height inflated the
+        /// faller well past the standing character. The longest dimension is the body's
+        /// length regardless of pose orientation, so home and falling characters read
+        /// as the same-size body. Computed once per skin.
         /// </summary>
         private float ComputeSkinScale(Sprite sprite)
         {
-            float visibleHeight = VisibleSpriteHeight(sprite);
-            if (visibleHeight <= 0.0001f)
+            float longest = VisibleSpriteLongestDimension(sprite);
+            if (longest <= 0.0001f)
             {
                 return skinScale;
             }
 
-            return skinTargetHeight / visibleHeight;
+            return skinTargetHeight / longest;
+        }
+
+        // Longest side of the sprite's visible (tight-mesh) bounding box, in world units.
+        private static float VisibleSpriteLongestDimension(Sprite sprite)
+        {
+            if (sprite == null)
+            {
+                return 0f;
+            }
+
+            Vector2[] verts = sprite.vertices;
+            if (verts != null && verts.Length > 0)
+            {
+                float minX = float.MaxValue, maxX = float.MinValue, minY = float.MaxValue, maxY = float.MinValue;
+                for (int i = 0; i < verts.Length; i++)
+                {
+                    if (verts[i].x < minX) minX = verts[i].x;
+                    if (verts[i].x > maxX) maxX = verts[i].x;
+                    if (verts[i].y < minY) minY = verts[i].y;
+                    if (verts[i].y > maxY) maxY = verts[i].y;
+                }
+
+                float extent = Mathf.Max(maxX - minX, maxY - minY);
+                if (extent > 0.0001f)
+                {
+                    return extent;
+                }
+            }
+
+            return Mathf.Max(sprite.bounds.size.x, sprite.bounds.size.y);
         }
 
         // Standing poses are normalized to their own visible height so every skin stands
