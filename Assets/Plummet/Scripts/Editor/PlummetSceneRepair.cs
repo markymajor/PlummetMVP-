@@ -212,6 +212,10 @@ namespace PlummetEditor
                 SetFloat(spawner, "reachFractionLate", 0.5f);
                 SetFloat(spawner, "minVerticalSpacing", 2.2f);
                 SetFloat(spawner, "sandwichSpacing", 4.5f);
+                // Chunkier obstacles (0.45 read spindly) tinted into the navy/teal palette.
+                SetFloat(spawner, "minScale", 0.7f);
+                SetFloat(spawner, "maxScale", 1.25f);
+                SetColor(spawner, "obstacleTint", new Color(0.6f, 0.72f, 0.78f, 1f));
             }
 
             EnsureEventSystem();

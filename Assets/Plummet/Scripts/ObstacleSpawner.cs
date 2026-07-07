@@ -20,8 +20,10 @@ namespace Plummet
         [SerializeField] private float safetyMargin = 0.5f;
         [Tooltip("Don't bother spawning if the fair reach is below this (too shallow to matter).")]
         [SerializeField] private float minReach = 0.2f;
-        [SerializeField] private float minScale = 0.45f;
+        [SerializeField] private float minScale = 0.7f;
         [SerializeField] private float maxScale = 1.25f;
+        [Tooltip("Tint applied to obstacle sprites so the legacy grey art sits in the scene's navy/teal palette instead of reading as pasted-in.")]
+        [SerializeField] private Color obstacleTint = new Color(0.6f, 0.72f, 0.78f, 1f);
 
         [Header("Difficulty ramp")]
         [SerializeField] private float initialInterval = 2.2f;
@@ -139,22 +141,36 @@ namespace Plummet
                 scroller.enabled = false;
             }
 
-            // Measure the collider's unscaled half-width, then scale so the protrusion
-            // (collider half-width centred on the wall edge) equals the fair reach.
+            // The wall-side end is buried INSIDE the wall by the root offset (edge noise +
+            // lining + margin, same convention as ObstacleRider) so the base always reads
+            // as rooted in brick. Scale so the reach PAST the smooth edge — total scaled
+            // half-width minus the buried root — equals the fair reach.
             Collider2D collider = obstacle.GetComponent<Collider2D>();
             obstacle.transform.localScale = Vector3.one;
             Physics2D.SyncTransforms();
             float halfWidth = collider != null && collider.bounds.size.x > 0.05f ? collider.bounds.size.x * 0.5f : 0.5f;
 
-            float scale = Mathf.Clamp(desiredReach / halfWidth, minScale, maxScale);
-            float protrusion = halfWidth * scale;
+            float rootOffset = ObstacleRider.RootOffset(pathManager, width);
+            float scale = Mathf.Clamp((desiredReach + rootOffset) / halfWidth, minScale, maxScale);
+            float protrusion = halfWidth * scale - rootOffset;
             if (protrusion > maxReach)
             {
                 ReleaseObstacle(obstacle);
                 return; // can't fit even at min scale: skip rather than block the lane.
             }
 
+            if (protrusion < minReach)
+            {
+                ReleaseObstacle(obstacle);
+                return; // would sit (almost) fully buried: pointless, skip.
+            }
+
             obstacle.transform.localScale = new Vector3(side > 0 ? -scale : scale, scale, 1f);
+
+            foreach (SpriteRenderer sr in obstacle.GetComponentsInChildren<SpriteRenderer>(true))
+            {
+                sr.color = obstacleTint;
+            }
 
             ObstacleRider rider = obstacle.GetComponent<ObstacleRider>();
             if (rider == null)
