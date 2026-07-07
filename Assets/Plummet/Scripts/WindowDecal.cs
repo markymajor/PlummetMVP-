@@ -41,6 +41,12 @@ namespace Plummet
         [SerializeField] private float maxNeighbourHeight;
         [Tooltip("Wall decals: -1/+1 pins this decal to the left/right wall (per-side lattice); 0 alternates by slot (legacy).")]
         [SerializeField] private int wallSide;
+        [Tooltip("Chance (0..1) that this decal actually shows on a given loop cycle, rolled at respawn — for rare treats like the graffiti tags. 1 = always.")]
+        [SerializeField] private float showChance = 1f;
+        [Tooltip("Random +/- tilt (degrees) re-rolled each respawn, so tags sit on the wall at a slightly different angle every time. 0 = upright.")]
+        [SerializeField] private float maxTiltDegrees;
+        [Tooltip("Mirror the sprite on the right wall so it faces into the shaft (lit windows). Turn OFF for readable art like the graffiti tags.")]
+        [SerializeField] private bool flipOnRightWall = true;
 
         private float span;
         private float bandHeight;
@@ -49,6 +55,7 @@ namespace Plummet
         private float jitter;
         private float currentX;
         private float currentScale;
+        private float currentTilt;
         private int lastCycle;
         private bool visibleThisCycle = true;
         private GameState lastGmState = (GameState)(-1);
@@ -125,7 +132,9 @@ namespace Plummet
         private void Respawn()
         {
             jitter = Random.Range(jitterMargin, Mathf.Max(jitterMargin, bandHeight - jitterMargin));
-            visibleThisCycle = true;
+            // Rarity roll: some decals (graffiti tags) only show on a fraction of cycles.
+            visibleThisCycle = showChance >= 1f || Random.value <= showChance;
+            currentTilt = maxTiltDegrees > 0f ? Random.Range(-maxTiltDegrees, maxTiltDegrees) : 0f;
 
             if (onWall)
             {
@@ -134,11 +143,23 @@ namespace Plummet
                 int side = wallSide != 0 ? (int)Mathf.Sign(wallSide) : ((slot % 2 == 0) ? -1 : 1);
                 currentX = side * Random.Range(wallXMin, wallXMax);
 
-                if (containInWall)
+                if (containInWall && visibleThisCycle)
                 {
                     currentScale = Random.Range(minScale, maxScale);
-                    float y = YFor(slot * bandHeight + jitter + scrollAccum);
-                    visibleThisCycle = TryPlaceInWall(side, y, out currentX);
+                    // The rolled Y may sit beside a wide corridor stretch; try a few other
+                    // spots WITHIN this band (so all lattice guarantees hold) before
+                    // giving the cycle up — wide decals rarely fit on the first roll.
+                    visibleThisCycle = false;
+                    for (int attempt = 0; attempt < 6 && !visibleThisCycle; attempt++)
+                    {
+                        if (attempt > 0)
+                        {
+                            jitter = Random.Range(jitterMargin, Mathf.Max(jitterMargin, bandHeight - jitterMargin));
+                        }
+
+                        float y = YFor(slot * bandHeight + jitter + scrollAccum);
+                        visibleThisCycle = TryPlaceInWall(side, y, out currentX);
+                    }
                 }
             }
             else if (xLane >= 0)
@@ -220,8 +241,10 @@ namespace Plummet
             // outward push as a backstop against poking into the corridor.
             float x = onWall && !containInWall ? ClampOutsideCorridor(currentX, y) : currentX;
             transform.position = new Vector3(x, y, transform.position.z);
+            transform.localRotation = Quaternion.Euler(0f, 0f, currentTilt);
             // Flip lit windows on the right wall so they face into the shaft consistently.
-            transform.localScale = new Vector3(onWall && currentX > 0f ? -currentScale : currentScale, currentScale, 1f);
+            bool flip = onWall && flipOnRightWall && currentX > 0f;
+            transform.localScale = new Vector3(flip ? -currentScale : currentScale, currentScale, 1f);
 
             if (spriteRenderer != null)
             {

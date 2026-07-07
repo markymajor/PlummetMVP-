@@ -713,7 +713,7 @@ namespace PlummetEditor
         {
             foreach (Transform t in Object.FindObjectsByType<Transform>(FindObjectsSortMode.None))
             {
-                if (t != null && (t.name.StartsWith("Wall Window") || t.name.StartsWith("Shaft Bg Window") || t.name.StartsWith("Shaft Brick") || t.name.StartsWith("Wall Brick Decal")))
+                if (t != null && (t.name.StartsWith("Wall Window") || t.name.StartsWith("Shaft Bg Window") || t.name.StartsWith("Shaft Brick") || t.name.StartsWith("Wall Brick Decal") || t.name.StartsWith("Wall Graffiti")))
                 {
                     Object.DestroyImmediate(t.gameObject);
                 }
@@ -746,13 +746,29 @@ namespace PlummetEditor
             // knows the tallest decal in its lattice and derives its jitter margin from
             // (ownHeight + tallest)/2 + clearance, so the bigger windows automatically
             // get more room instead of overlapping the bricks.
-            const int wallBandsPerSide = 6;
+            const int wallBandsPerSide = 7;
             const float wallWindowMaxScale = 0.8f;
             const float wallBrickMaxScale = 0.85f;
             float windowHeight = litWindow != null ? litWindow.rect.height / litWindow.pixelsPerUnit * wallWindowMaxScale : 1.6f;
             Sprite brickRef = LoadGameSprite("Briks_02-mask.png");
             float brickHeight = brickRef != null ? brickRef.rect.height / brickRef.pixelsPerUnit * wallBrickMaxScale : 1.6f;
-            float wallTallest = Mathf.Max(windowHeight, brickHeight);
+            // Graffiti tags: sized by target WIDTH (readable but clearly on the wall).
+            const float graffitiMinWidth = 1.5f;
+            const float graffitiMaxWidth = 2f;
+            Sprite evieTag = LoadGameSprite("graffiti-evie.png");
+            Sprite harrisonTag = LoadGameSprite("graffiti-harrison.png");
+            float tagHeight = 0f;
+            foreach (Sprite tag in new[] { evieTag, harrisonTag })
+            {
+                if (tag != null)
+                {
+                    tagHeight = Mathf.Max(tagHeight, tag.rect.height / tag.pixelsPerUnit * (graffitiMaxWidth / (tag.rect.width / tag.pixelsPerUnit)));
+                }
+            }
+
+            float wallTallest = Mathf.Max(Mathf.Max(windowHeight, brickHeight), tagHeight);
+            // Spray paint on brick, not a sticker: dimmed toward the navy wall.
+            Color graffitiTint = new Color(0.7f, 0.72f, 0.8f, 0.85f);
 
             foreach (int side in new[] { -1, 1 })
             {
@@ -772,6 +788,20 @@ namespace PlummetEditor
                     CreateWindowDecal($"Wall Brick Decal {sideTag}{slot}", cluster, wallBrickTint, 3, true, slot, wallBandsPerSide, 0.65f, wallBrickMaxScale, 0f, 2.6f, 3.7f,
                         containInWall: true, wallSide: side, maxNeighbourHeight: wallTallest);
                 }
+
+                // Rare graffiti tag in the lattice's last band: Evie tags the left wall,
+                // Harrison the right. Shows on ~1 in 3 cycles, tilted a little each time,
+                // depth-aware like the bricks, never mirrored (it's readable text).
+                Sprite tagSprite = side < 0 ? evieTag : harrisonTag;
+                if (tagSprite != null)
+                {
+                    float nativeW = tagSprite.rect.width / tagSprite.pixelsPerUnit;
+                    CreateWindowDecal($"Wall Graffiti {sideTag}", tagSprite, graffitiTint, 3, true, 6, wallBandsPerSide,
+                        graffitiMinWidth / nativeW, graffitiMaxWidth / nativeW, 0f, 2.6f, 3.7f,
+                        // 0.5 roll x ~2/3 depth eligibility = ~1 in 3 cycles actually shown.
+                        containInWall: true, wallSide: side, maxNeighbourHeight: wallTallest,
+                        showChance: 0.5f, maxTiltDegrees: 6f, flipOnRightWall: false);
+                }
             }
 
             const int centreBands = 6;
@@ -789,7 +819,7 @@ namespace PlummetEditor
             }
         }
 
-        private static void CreateWindowDecal(string name, Sprite sprite, Color tint, int sortingOrder, bool onWall, int slot, int count, float minScale, float maxScale, float centreXRange, float wallXMin = 2.7f, float wallXMax = 3.05f, int xLane = -1, bool containInWall = false, int wallSide = 0, float maxNeighbourHeight = 0f)
+        private static void CreateWindowDecal(string name, Sprite sprite, Color tint, int sortingOrder, bool onWall, int slot, int count, float minScale, float maxScale, float centreXRange, float wallXMin = 2.7f, float wallXMax = 3.05f, int xLane = -1, bool containInWall = false, int wallSide = 0, float maxNeighbourHeight = 0f, float showChance = 1f, float maxTiltDegrees = 0f, bool flipOnRightWall = true)
         {
             if (sprite == null)
             {
@@ -817,6 +847,9 @@ namespace PlummetEditor
             SetBool(decal, "containInWall", containInWall);
             SetInt(decal, "wallSide", wallSide);
             SetFloat(decal, "maxNeighbourHeight", maxNeighbourHeight);
+            SetFloat(decal, "showChance", showChance);
+            SetFloat(decal, "maxTiltDegrees", maxTiltDegrees);
+            SetBool(decal, "flipOnRightWall", flipOnRightWall);
             // With maxNeighbourHeight set (wall decor), minVerticalGap is the CLEARANCE
             // added on top of the size-aware gap; centre decals keep the fixed backstop
             // sized for their big round-2 windows.
