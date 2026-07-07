@@ -35,8 +35,12 @@ namespace Plummet
         [SerializeField] private bool containInWall;
         [Tooltip("Clearance kept between a contained decal and both the lining bricks and the screen edge.")]
         [SerializeField] private float containMargin = 0.15f;
-        [Tooltip("Minimum vertical gap kept between neighbouring windows (backstop via the jitter margin).")]
+        [Tooltip("Minimum vertical gap kept between neighbouring windows (backstop via the jitter margin). When maxNeighbourHeight is set this acts as the CLEARANCE on top of the size-aware gap.")]
         [SerializeField] private float minVerticalGap = 1.4f;
+        [Tooltip("World height of the tallest decal sharing this lattice. When > 0 the jitter margin is derived from actual decal sizes — requiredGap = (ownHeight + tallestNeighbour)/2 + clearance — so bigger decals automatically get more spacing instead of overlapping.")]
+        [SerializeField] private float maxNeighbourHeight;
+        [Tooltip("Wall decals: -1/+1 pins this decal to the left/right wall (per-side lattice); 0 alternates by slot (legacy).")]
+        [SerializeField] private int wallSide;
 
         private float span;
         private float bandHeight;
@@ -57,9 +61,18 @@ namespace Plummet
             spriteRenderer = GetComponent<SpriteRenderer>();
             span = Mathf.Max(0.01f, loopTopY - loopBottomY);
             bandHeight = span / Mathf.Max(1, count);
-            // Keep jitter inside the band so neighbouring windows never get closer than the
-            // requested gap (worst-case neighbour gap = 2 * jitterMargin).
-            jitterMargin = Mathf.Clamp(minVerticalGap * 0.5f, 0f, bandHeight * 0.45f);
+            // Keep jitter inside the band so neighbouring decals never get closer than the
+            // required gap (worst-case adjacent-band gap = margin_a + margin_b). With
+            // maxNeighbourHeight set, the gap is derived from the decals' actual world
+            // heights, so bigger art automatically gets more spacing.
+            float gapNeed = minVerticalGap;
+            if (maxNeighbourHeight > 0f && spriteRenderer != null && spriteRenderer.sprite != null)
+            {
+                float ownHeight = spriteRenderer.sprite.bounds.size.y * maxScale;
+                gapNeed = (ownHeight + maxNeighbourHeight) * 0.5f + minVerticalGap;
+            }
+
+            jitterMargin = Mathf.Clamp(gapNeed * 0.5f, 0f, bandHeight * 0.45f);
             scrollAccum = 0f;
             Respawn();
 
@@ -116,10 +129,9 @@ namespace Plummet
 
             if (onWall)
             {
-                // Alternate walls by band so the windows can't all clump on one side (a
-                // random side per window clumps just like a random Y did); the exact spot
-                // on the wall stays random for variation.
-                int side = (slot % 2 == 0) ? -1 : 1;
+                // Per-side lattice: wallSide pins this decal to one wall so each wall's
+                // decor shares a single band set; 0 falls back to alternating by slot.
+                int side = wallSide != 0 ? (int)Mathf.Sign(wallSide) : ((slot % 2 == 0) ? -1 : 1);
                 currentX = side * Random.Range(wallXMin, wallXMax);
 
                 if (containInWall)

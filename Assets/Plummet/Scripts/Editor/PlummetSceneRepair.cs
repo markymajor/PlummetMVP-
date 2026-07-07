@@ -739,26 +739,39 @@ namespace PlummetEditor
             // Briks_* sprites are darker than the wall and can't be lightened by tinting).
             Color wallBrickTint = new Color(0.16f, 0.36f, 0.44f, 1f);
 
-            // ONE shared lattice per population (OG reads as a few LARGE silhouettes, not
-            // many small ones). WALL decals: 8 bands split between lit windows and brick
-            // clusters, interleaved so each wall alternates window/brick with 2 bands of
-            // spacing per side (side = slot % 2). CENTRE decals: 6 bands, two big faint
-            // windows + two subtle bricks in distinct x-lanes, two bands left empty.
-            const int wallBands = 8;
-            int[] wallWindowSlots = { 0, 1, 4, 5 };
-            foreach (int slot in wallWindowSlots)
-            {
-                CreateWindowDecal("Wall Window " + slot, litWindow, litTint, 6, true, slot, wallBands, 0.6f, 0.8f, 0f);
-            }
+            // ONE shared lattice PER WALL SIDE for all wall decor (same pattern as the
+            // shaft-centre lattice): each wall's lit windows + brick clusters come from a
+            // single 4-band set (windows every 2nd band, bricks in the rest), so no two
+            // wall decals can ever share a band. Spacing is size-aware: every wall decal
+            // knows the tallest decal in its lattice and derives its jitter margin from
+            // (ownHeight + tallest)/2 + clearance, so the bigger windows automatically
+            // get more room instead of overlapping the bricks.
+            const int wallBandsPerSide = 4;
+            const float wallWindowMaxScale = 0.8f;
+            const float wallBrickMaxScale = 0.85f;
+            float windowHeight = litWindow != null ? litWindow.rect.height / litWindow.pixelsPerUnit * wallWindowMaxScale : 1.6f;
+            Sprite brickRef = LoadGameSprite("Briks_02-mask.png");
+            float brickHeight = brickRef != null ? brickRef.rect.height / brickRef.pixelsPerUnit * wallBrickMaxScale : 1.6f;
+            float wallTallest = Mathf.Max(windowHeight, brickHeight);
 
-            int[] wallBrickSlots = { 2, 3, 6, 7 };
-            foreach (int slot in wallBrickSlots)
+            foreach (int side in new[] { -1, 1 })
             {
-                Sprite cluster = LoadGameSprite($"Briks_{2 + slot % 5:00}-mask.png");
-                // Depth-aware: WindowDecal re-places these fully inside the wall band
-                // (behind the lining, inside the screen edge) each cycle, and skips the
-                // cycle entirely when the corridor is too wide to leave room.
-                CreateWindowDecal("Wall Brick Decal " + slot, cluster, wallBrickTint, 3, true, slot, wallBands, 0.65f, 0.85f, 0f, 2.6f, 3.7f, containInWall: true);
+                string sideTag = side < 0 ? "L" : "R";
+                foreach (int slot in new[] { 0, 2 })
+                {
+                    CreateWindowDecal($"Wall Window {sideTag}{slot}", litWindow, litTint, 6, true, slot, wallBandsPerSide, 0.6f, wallWindowMaxScale, 0f,
+                        wallSide: side, maxNeighbourHeight: wallTallest);
+                }
+
+                foreach (int slot in new[] { 1, 3 })
+                {
+                    Sprite cluster = LoadGameSprite($"Briks_{2 + (slot + (side < 0 ? 0 : 2)) % 5:00}-mask.png");
+                    // Depth-aware: WindowDecal re-places these fully inside the wall band
+                    // (behind the lining, inside the screen edge) each cycle, and skips the
+                    // cycle entirely when the corridor is too wide to leave room.
+                    CreateWindowDecal($"Wall Brick Decal {sideTag}{slot}", cluster, wallBrickTint, 3, true, slot, wallBandsPerSide, 0.65f, wallBrickMaxScale, 0f, 2.6f, 3.7f,
+                        containInWall: true, wallSide: side, maxNeighbourHeight: wallTallest);
+                }
             }
 
             const int centreBands = 6;
@@ -776,7 +789,7 @@ namespace PlummetEditor
             }
         }
 
-        private static void CreateWindowDecal(string name, Sprite sprite, Color tint, int sortingOrder, bool onWall, int slot, int count, float minScale, float maxScale, float centreXRange, float wallXMin = 2.7f, float wallXMax = 3.05f, int xLane = -1, bool containInWall = false)
+        private static void CreateWindowDecal(string name, Sprite sprite, Color tint, int sortingOrder, bool onWall, int slot, int count, float minScale, float maxScale, float centreXRange, float wallXMin = 2.7f, float wallXMax = 3.05f, int xLane = -1, bool containInWall = false, int wallSide = 0, float maxNeighbourHeight = 0f)
         {
             if (sprite == null)
             {
@@ -802,11 +815,12 @@ namespace PlummetEditor
             SetFloat(decal, "wallXMax", wallXMax);
             SetInt(decal, "xLane", xLane);
             SetBool(decal, "containInWall", containInWall);
-            // Centre decals share one sparse lattice; a bigger backstop gap keeps even
-            // adjacent-band neighbours (window vs brick) from ever touching, sized for
-            // the bigger round-2 windows. Wall decals alternate sides per band, so
-            // same-side neighbours are already two bands apart.
-            SetFloat(decal, "minVerticalGap", onWall ? 1.4f : 2.4f);
+            SetInt(decal, "wallSide", wallSide);
+            SetFloat(decal, "maxNeighbourHeight", maxNeighbourHeight);
+            // With maxNeighbourHeight set (wall decor), minVerticalGap is the CLEARANCE
+            // added on top of the size-aware gap; centre decals keep the fixed backstop
+            // sized for their big round-2 windows.
+            SetFloat(decal, "minVerticalGap", maxNeighbourHeight > 0f ? 0.35f : (onWall ? 1.4f : 2.4f));
         }
 
         private static GameObject CreatePortraitUiRoot(Transform parent)
