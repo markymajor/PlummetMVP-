@@ -746,7 +746,7 @@ namespace PlummetEditor
             // knows the tallest decal in its lattice and derives its jitter margin from
             // (ownHeight + tallest)/2 + clearance, so the bigger windows automatically
             // get more room instead of overlapping the bricks.
-            const int wallBandsPerSide = 4;
+            const int wallBandsPerSide = 6;
             const float wallWindowMaxScale = 0.8f;
             const float wallBrickMaxScale = 0.85f;
             float windowHeight = litWindow != null ? litWindow.rect.height / litWindow.pixelsPerUnit * wallWindowMaxScale : 1.6f;
@@ -757,13 +757,13 @@ namespace PlummetEditor
             foreach (int side in new[] { -1, 1 })
             {
                 string sideTag = side < 0 ? "L" : "R";
-                foreach (int slot in new[] { 0, 2 })
+                foreach (int slot in new[] { 0, 3 })
                 {
                     CreateWindowDecal($"Wall Window {sideTag}{slot}", litWindow, litTint, 6, true, slot, wallBandsPerSide, 0.6f, wallWindowMaxScale, 0f,
                         wallSide: side, maxNeighbourHeight: wallTallest);
                 }
 
-                foreach (int slot in new[] { 1, 3 })
+                foreach (int slot in new[] { 1, 2, 4, 5 })
                 {
                     Sprite cluster = LoadGameSprite($"Briks_{2 + (slot + (side < 0 ? 0 : 2)) % 5:00}-mask.png");
                     // Depth-aware: WindowDecal re-places these fully inside the wall band
