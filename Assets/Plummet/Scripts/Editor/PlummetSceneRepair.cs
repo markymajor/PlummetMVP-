@@ -773,13 +773,21 @@ namespace PlummetEditor
             foreach (int side in new[] { -1, 1 })
             {
                 string sideTag = side < 0 ? "L" : "R";
-                foreach (int slot in new[] { 0, 3 })
+                // Lit windows thinned to 3 total (two left, one right) and given a rarity
+                // roll like the graffiti (0.6, tuned live): 1-2 visible per screen with
+                // occasional stretches of none — irregular, not a drumbeat. The right
+                // wall's window sits in a DIFFERENT band (5) than the left's (0/3): same
+                // slot on both walls always mirrored at near-identical Y (the in-band
+                // jitter room is only ~0.4u), which read as mechanical.
+                foreach (int slot in side < 0 ? new[] { 0, 3 } : new[] { 5 })
                 {
                     CreateWindowDecal($"Wall Window {sideTag}{slot}", litWindow, litTint, 6, true, slot, wallBandsPerSide, 0.6f, wallWindowMaxScale, 0f,
-                        wallSide: side, maxNeighbourHeight: wallTallest);
+                        wallSide: side, maxNeighbourHeight: wallTallest, showChance: 0.6f);
                 }
 
-                foreach (int slot in new[] { 1, 2, 4, 5 })
+                // Bricks fill the bands the side's window/graffiti don't own (disjoint
+                // per-side allocation: L = W{0,3} B{1,2,4,5}; R = W{5} B{1,2,3,4}; G{6}).
+                foreach (int slot in side < 0 ? new[] { 1, 2, 4, 5 } : new[] { 1, 2, 3, 4 })
                 {
                     Sprite cluster = LoadGameSprite($"Briks_{2 + (slot + (side < 0 ? 0 : 2)) % 5:00}-mask.png");
                     // Depth-aware: WindowDecal re-places these fully inside the wall band
