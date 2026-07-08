@@ -122,7 +122,7 @@ namespace PlummetEditor
             // bounces off the net's right edge. Title art replaces the red GAME OVER.
             AddImage(gameOverPanel.transform, "Rescued Title", LoadUiSprite("rescued-title.png"), Anchor(0.5f, 0.78f, 700f, 139f));
             AddImage(gameOverPanel.transform, "Rescue Firefighter", LoadUiSprite("rescue-firefighter.png"), Anchor(0.225f, 0.42f, 486f, 502f));
-            Image rescuedPlayerImage = AddImage(gameOverPanel.transform, "Rescued Player", null, Anchor(0.55f, 0.5f, 200f, 200f));
+            Image rescuedPlayerImage = AddImage(gameOverPanel.transform, "Rescued Player", null, Anchor(0.5f, 0.44f, 200f, 200f));
             rescuedPlayerImage.raycastTarget = false;
             // Big in-game-style orange score (ApplyScoreStyle, like the HUD) with a
             // smaller best beneath.

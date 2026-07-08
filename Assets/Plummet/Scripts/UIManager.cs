@@ -221,6 +221,7 @@ namespace Plummet
 
             rescuedPlayerImage.enabled = true;
             rescuedPlayerImage.sprite = falling;
+            rescuedPlayerImage.color = Color.white; // the baked placeholder is translucent
             rescuedPlayerImage.preserveAspect = true;
             rescuedPlayerImage.rectTransform.localRotation = Quaternion.Euler(0f, 0f, rescuedPlayerTilt);
 
