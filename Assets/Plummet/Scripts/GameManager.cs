@@ -215,6 +215,10 @@ namespace Plummet
             }
 
             State = GameState.GameOver;
+            // The RESCUED! screen shows the character bounced onto the firefighter's net
+            // (a UI image in the selected skin); hide the world player so there's one
+            // character on screen. Start/retry paths re-activate it.
+            player.gameObject.SetActive(false);
             scoreManager.SaveHighScore();
             uiManager.ShowGameOver(scoreManager.Score, scoreManager.HighScore);
         }

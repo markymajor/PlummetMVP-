@@ -27,6 +27,10 @@ namespace Plummet
         [SerializeField] private Button chooseSkinBackButton;
         [SerializeField] private Button chooseSkinSelectButton;
         [SerializeField] private SkinPickerUI skinPicker;
+        [Tooltip("The RESCUED! screen's bounced character: shows the selected skin's falling frame above the firefighter's net (the world player hides on game over).")]
+        [SerializeField] private Image rescuedPlayerImage;
+        [Tooltip("Tilt (degrees) of the rescued character, so it reads as bouncing off the net rather than pasted upright.")]
+        [SerializeField] private float rescuedPlayerTilt = 35f;
 
         private bool shouldShowOpeningInstructions = true;
         private bool showingOpeningInstructions;
@@ -193,6 +197,79 @@ namespace Plummet
             {
                 finalBestText.text = $"Best {highScore:N0}";
             }
+
+            ShowRescuedPlayer();
+        }
+
+        // The bounced character on the net: the selected skin's falling frame, sized to
+        // match the in-game character (world size projected through the camera onto the
+        // UI reference resolution) and tilted so it reads as mid-bounce.
+        private void ShowRescuedPlayer()
+        {
+            if (rescuedPlayerImage == null)
+            {
+                return;
+            }
+
+            Skin skin = SkinLibrary.Instance != null ? SkinLibrary.Instance.Selected : null;
+            Sprite falling = skin != null ? skin.FirstFrame : null;
+            if (falling == null)
+            {
+                rescuedPlayerImage.enabled = false;
+                return;
+            }
+
+            rescuedPlayerImage.enabled = true;
+            rescuedPlayerImage.sprite = falling;
+            rescuedPlayerImage.preserveAspect = true;
+            rescuedPlayerImage.rectTransform.localRotation = Quaternion.Euler(0f, 0f, rescuedPlayerTilt);
+
+            // Match the in-game size: the world player's visible body length is 1.66u;
+            // convert to reference-resolution pixels via the camera projection, then scale
+            // the full quad so the sprite's visible longest dimension lands on that.
+            Camera cam = Camera.main;
+            float ortho = cam != null && cam.orthographic ? cam.orthographicSize : 5.5f;
+            float referenceHeight = 1920f;
+            CanvasScaler scaler = GetComponentInParent<CanvasScaler>();
+            if (scaler == null)
+            {
+                scaler = FindFirstObjectByType<CanvasScaler>();
+            }
+
+            if (scaler != null && scaler.referenceResolution.y > 0f)
+            {
+                referenceHeight = scaler.referenceResolution.y;
+            }
+
+            float targetPx = 1.66f / (2f * ortho) * referenceHeight;
+            float visibleLongest = VisibleLongestDimension(falling);
+            float quadLongest = Mathf.Max(falling.bounds.size.x, falling.bounds.size.y);
+            float k = visibleLongest > 0.0001f ? targetPx * (quadLongest / visibleLongest) : targetPx;
+            float aspect = falling.rect.height > 0f ? falling.rect.width / falling.rect.height : 1f;
+            rescuedPlayerImage.rectTransform.sizeDelta = aspect >= 1f
+                ? new Vector2(k, k / aspect)
+                : new Vector2(k * aspect, k);
+        }
+
+        // Longest side of the sprite's visible (tight-mesh) bbox, world units.
+        private static float VisibleLongestDimension(Sprite sprite)
+        {
+            Vector2[] verts = sprite.vertices;
+            if (verts == null || verts.Length == 0)
+            {
+                return Mathf.Max(sprite.bounds.size.x, sprite.bounds.size.y);
+            }
+
+            float minX = float.MaxValue, maxX = float.MinValue, minY = float.MaxValue, maxY = float.MinValue;
+            for (int i = 0; i < verts.Length; i++)
+            {
+                if (verts[i].x < minX) minX = verts[i].x;
+                if (verts[i].x > maxX) maxX = verts[i].x;
+                if (verts[i].y < minY) minY = verts[i].y;
+                if (verts[i].y > maxY) maxY = verts[i].y;
+            }
+
+            return Mathf.Max(maxX - minX, maxY - minY);
         }
 
         public void SetScore(int score, int highScore)

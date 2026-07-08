@@ -116,11 +116,16 @@ namespace PlummetEditor
 
             GameObject gameOverPanel = CreatePanel(uiRoot, "Game Over Panel");
             AddDimmer(gameOverPanel.transform);
-            AddImage(gameOverPanel.transform, "Game Over Image", LoadUiSprite("gameover.png"), Anchor(0.5f, 0.78f, 690f, 250f));
-            // The single dead character is the REAL fallen player, frozen in the shaft in the
-            // selected skin - no legacy death.png stand-in (which was the wrong character for
-            // Evie/Harrison). Big in-game-style orange score (ApplyScoreStyle, like the HUD)
-            // with a smaller best beneath.
+            // RESCUED! screen: nobody dies - a firefighter leans out of the shaft wall
+            // (arch flush to the panel's left edge) holding a net toward the centre, and
+            // the selected skin's faller (a UI image; the world player hides on game over)
+            // bounces off the net's right edge. Title art replaces the red GAME OVER.
+            AddImage(gameOverPanel.transform, "Rescued Title", LoadUiSprite("rescued-title.png"), Anchor(0.5f, 0.78f, 700f, 139f));
+            AddImage(gameOverPanel.transform, "Rescue Firefighter", LoadUiSprite("rescue-firefighter.png"), Anchor(0.225f, 0.42f, 486f, 502f));
+            Image rescuedPlayerImage = AddImage(gameOverPanel.transform, "Rescued Player", null, Anchor(0.55f, 0.5f, 200f, 200f));
+            rescuedPlayerImage.raycastTarget = false;
+            // Big in-game-style orange score (ApplyScoreStyle, like the HUD) with a
+            // smaller best beneath.
             Text finalScoreText = AddText(gameOverPanel.transform, "Final Score Text", "0", Anchor(0.5f, 0.63f, 700f, 160f), 96, TextAnchor.MiddleCenter, new Color(1f, 0.47f, 0.18f));
             ApplyScoreStyle(finalScoreText);
             Text finalBestText = AddText(gameOverPanel.transform, "Final Best Text", "Best 0", Anchor(0.5f, 0.555f, 560f, 70f), 38, TextAnchor.MiddleCenter, new Color(1f, 1f, 1f, 0.9f));
@@ -139,6 +144,7 @@ namespace PlummetEditor
             Set(uiManager, "highScoreText", highScoreText);
             Set(uiManager, "finalScoreText", finalScoreText);
             Set(uiManager, "finalBestText", finalBestText);
+            Set(uiManager, "rescuedPlayerImage", rescuedPlayerImage);
             Set(uiManager, "playButton", playButton);
             Set(uiManager, "distanceNextButton", distanceNextButton);
             Set(uiManager, "speedNextButton", speedNextButton);
