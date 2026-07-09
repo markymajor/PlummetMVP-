@@ -783,16 +783,16 @@ namespace PlummetEditor
             foreach (int side in new[] { -1, 1 })
             {
                 string sideTag = side < 0 ? "L" : "R";
-                // Lit windows thinned to 3 total (two left, one right) and given a rarity
-                // roll like the graffiti (0.6, tuned live): 1-2 visible per screen with
-                // occasional stretches of none — irregular, not a drumbeat. The right
-                // wall's window sits in a DIFFERENT band (5) than the left's (0/3): same
-                // slot on both walls always mirrored at near-identical Y (the in-band
-                // jitter room is only ~0.4u), which read as mechanical.
+                // Lit windows thinned to 3 total (two left, one right) with a rarity roll
+                // like the graffiti (0.4): usually zero or one per screen, occasionally
+                // two — a treat, not a drumbeat. The right wall's window sits in a
+                // DIFFERENT band (5) than the left's (0/3): same slot on both walls
+                // always mirrored at near-identical Y (the in-band jitter room is only
+                // ~0.4u), which read as mechanical.
                 foreach (int slot in side < 0 ? new[] { 0, 3 } : new[] { 5 })
                 {
                     CreateWindowDecal($"Wall Window {sideTag}{slot}", litWindow, litTint, 6, true, slot, wallBandsPerSide, 0.6f, wallWindowMaxScale, 0f,
-                        wallSide: side, maxNeighbourHeight: wallTallest, showChance: 0.6f);
+                        wallSide: side, maxNeighbourHeight: wallTallest, showChance: 0.4f);
                 }
 
                 // Bricks fill the bands the side's window/graffiti don't own (disjoint
