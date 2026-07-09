@@ -37,7 +37,7 @@ firefighter when a run ends. Target: playable on the family's phones.
 | # | Task | Owner | Size |
 |---|------|-------|------|
 | 1 | **Audio pass**: 1 music loop + core SFX (drop whoosh, wall thud, rescue boing, button tap). Sourcing: kid-friendly free/CC packs or generated. Mute toggle. | local Claude (+ Mark picks sounds) | M |
-| 2 | **Android build on a real device**: build support module, player settings (portrait lock, icon, name), first APK sideload. | Mark + local Claude | M |
+| 2 | **iOS/iPadOS build on a real Apple device**: Unity iOS Build Support, bundle identifier, portrait lock, icon/name, generate Xcode project, Xcode signing, Build & Run to connected iPhone/iPad. | Mark + local Claude | M |
 | 3 | **Tilt tuning on device**: sensitivity/deadzone/lean feel; keep touch-drag fallback. First time accelerometer code gets felt. | Mark + local Claude | M |
 | 4 | **Safe-area / notch check** on the phone (HUD + buttons inside safe area). | local Claude | S |
 
@@ -62,8 +62,9 @@ firefighter when a run ends. Target: playable on the family's phones.
 ## Milestones
 - **M1 — Feature-complete on desktop** *(now – next session or two)*: P1 #1 audio in;
   in-flight art landed. Everything playable and delightful in the editor.
-- **M2 — On a phone**: P1 #2–4. The kids play it on a real device. This is the moment
-  that matters; prioritize over all polish.
+- **M2 — On a phone**: P1 #2–4, targeting **iPhone first, iPad second** via direct
+  Xcode install. The kids play it on a real device. This is the moment that matters;
+  prioritize over all polish.
 - **M3 — Kid-proofed**: P2 #6–8 (no dead buttons, clear or no instructions, icon).
   Survives a 5-year-old mashing the screen.
 - **M4 — Stretch**: more family skins, rigged animation, per-skin best scores,
