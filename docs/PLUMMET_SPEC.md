@@ -1,9 +1,10 @@
-# Plummet — Design Spec & Rebuild Plan
+# Plummet — Original Design Reference & Rebuild Record
 
-> Source of truth for rebuilding Plummet in Unity, derived from the original
-> 2014 Cocos2d / Objective-C source (author: Silviu). The original code is the
-> **soul** of the game; this document captures its mechanics exactly, then lays
-> out the modernized Unity rebuild.
+> **Status: design-history reference.** Sections 1–2 document the original 2014
+> Cocos2d/Objective-C game exactly (author: Silviu) — the *soul* the rebuild was
+> measured against. Section 3 records how the Unity rebuild turned out, including
+> where it deliberately diverged. **Planning, backlog, and milestones live in
+> [`BUILD_PLAN.md`](BUILD_PLAN.md).**
 
 ---
 
@@ -79,75 +80,46 @@ Recovered art (HD/@2x) in the original zip: `Initial01–03`,
 
 ---
 
-## 3. Original → current Unity build: gap analysis
+## 3. How the rebuild turned out (record, 2026-07)
 
-| Aspect | Original (2014) | Current Unity MVP | Action |
-|---|---|---|---|
-| Falling illusion | Shaft scrolls up, player fixed | Same ✅ | Keep |
-| Controls | Tilt only | Tilt + drag + keyboard | Keep modern multi-input |
-| Corridor | Hard zig-zag, stepped edges | Smooth width/center random walk | **Rework toward zig-zag** |
-| Collision | Silhouette polygon vs edges | Box/rotated colliders | Keep colliders (modern), tune to silhouette |
-| Wall color | `#023548` | `#03303B` (close) | **Set exact `#023548`** |
-| Wall texture | Edge bricks + decals | Flat tiled sprite | **Add brick edge + decals** |
-| Hazards | Walls only | Walls **+ spawned obstacles** | **Remove obstacles (not in original)** |
-| Difficulty | Speed 7, +0.25/5s, narrows, no cap | base 3.25→8.5, 0.045/s | **Retune to original character** |
-| Intro | Standing→falling pose morph | Trapdoor (new) | Keep trapdoor + add pose morph |
-| Score | Distance | Distance | Keep |
-| Build scene | — | Build settings point at empty `SampleScene` | **Fix to PlummetMVP** |
+The staged "faithful rebuild" plan completed and then the game **deliberately
+evolved past faithfulness** through play-tested design decisions. The soul
+survived intact; several surfaces were consciously modernized.
 
----
+### Kept faithful to the original
+- **The soul**: pure faller, player pinned high, shaft scrolls up, narrowing
+  winding corridor, walls kill, distance score, ramping speed.
+- **Anti-drift corridor wandering** (the `STEPS_COUNT` turn-back logic lives on
+  inside `PathManager.ChooseDirection`).
+- **Standing-on-land intro**: character stands on the surface, drops through a
+  trapdoor into the shaft — the modern take on the `Initial01` pose-morph flow.
+- **10-frame falling flail** (now per-character), brick lining along the
+  corridor edge, window decals on the walls, distance scoring.
 
-## 4. Rebuild plan (modernized, staged)
+### Deliberate divergences (decisions, not gaps)
+| Original | Rebuild | Why |
+|---|---|---|
+| Hard zig-zag stepped edges | **Organic Perlin wall edges** + dramatic width swings | Play-tested reference art preferred the canyon look; fairness clamps keep it passable by construction |
+| `#023548` teal walls | **Dark navy walls, light teal-grey shaft** | Matched to the chosen visual reference; better player contrast |
+| Walls only | **Wall-protrusion obstacles kept** (always-passable lane math) | Modern addition, kept by decision |
+| One character (Silviu's Mark) | **Skins: Mark, Evie, Harrison** — per-skin dives (backflip / jump-in), standing poses, Choose Player screen | The point of the rebuild: the kids play as themselves |
+| Game Over screen with dead character | **RESCUED!** — a firefighter catches you in a net | Kid-friendly reframe; replaced the planned death-frame entirely |
+| Tilt only | Tilt + touch-drag + keyboard | Modern multi-input (tilt tuning still pending a device build) |
+| No speed cap | Capped (`maxScrollSpeed`) | Sanity for small players |
+| Attract-scrolling menu shaft | **Static home**; the drop itself accelerates the scroll from rest | Makes home→run one continuous fall |
+| Dense random decals | **Sparse latticed decals** + rare kids' graffiti tags | Random clumping read as noise at phone scale |
 
-**Principle:** keep the soul (pure corridor-dodge, fixed faller, narrowing
-zig-zag, distance score) and modernize the implementation (New Input System,
-pooling, real colliders, multi-input, proper aspect handling, tunable values).
+### Where the current numbers live
+Tuning values are **owned by the code and the baked scene** (`PathManager`,
+`GameManager`, `ObstacleSpawner`, `PlummetSceneRepair`) — not duplicated here.
+The engineering invariants that protect the feel are listed in
+[`BUILD_PLAN.md` § Design invariants](BUILD_PLAN.md).
 
-- **Phase 0 — Foundation** ✅ done
-  - [x] Spec doc (this file).
-  - [x] Import recovered decorative wall art (`Briks_02–06`, `Window-Background`,
-    `Bricks-background_01–03`).
-  - [x] Exact original colors in the shaft (`#023548`).
-  - [x] Difficulty values retuned to the original's character.
-  - [x] Fix build settings to ship `PlummetMVP.unity`.
-
-- **Phase 1 — Faithful corridor** ✅ done
-  - [x] Rework `PathManager` generation to the stepped zig-zag (gap width +
-    stepped jumps, anti-drift, narrowing over time).
-  - [ ] Decorate walls with random rubble/window decals (`Briks_*`, `Window`)
-    — *art-ready, deferred to local tuning.*
-  - [ ] Parallax brick background behind the corridor — *deferred to local.*
-
-- **Phase 2 — Faithful feel** 🔧 in progress
-  - [x] Solid shaft walls that fill to the screen edge (thick walls; inner
-    collision face unchanged). Also fixes the "dark part beside the bricks"
-    note in gameplay.
-  - [ ] Retune tilt steering to the original (smoothed, edge-clamped); keep drag
-    + keyboard for desktop/testing — *needs a device to feel; do locally.*
-  - [ ] Standing→falling pose morph — *blocked: Mark art has no Initial02/03
-    poses; the trapdoor intro already covers the standing→falling handoff.*
-
-- **Phase 3 — Cleanup**
-  - [ ] ~~Remove obstacles~~ — **kept** per design decision (modern addition).
-  - [ ] Remove the unused `SampleScene` and dead band-aid tooling once the
-    generator is the single source of scene truth.
-
-> Items marked "local" touch runtime feel/visuals and are best landed with the
-> Unity play-test loop (play + screenshot) rather than blind from the repo.
-
----
-
-## 5. Tuning reference (Unity, starting points)
-
-| Value | Original | Unity start | Notes |
-|---|---|---|---|
-| Start fall speed | 7 pts/frame (~8 u/s) | `baseScrollSpeed ≈ 5.5` | gentler open, modern |
-| Speed ramp | +0.25/5s (~+0.057 u/s²) | `speedIncreasePerSecond ≈ 0.06` | steeper than MVP |
-| Speed cap | none | `maxScrollSpeed ≈ 12` | sanity cap (original had none) |
-| Gap width | 240 → 140 pts | `start 4.6 → min 2.5 u` | ~53 pts/unit |
-| Segment height | 100–130 pts | `1.9–2.4 u` | |
-| Zig-zag step | 25–55 pts | `0.5–1.0 u` | |
-| Wall fill | `#023548` | `(0.008,0.208,0.282)` | exact |
-| Sky | `#3B6D6F` | `(0.231,0.427,0.435)` | exact |
-
-*Scale assumes ~53 original points per Unity world unit (≈6 u wide portrait).*
+### Original tuning (kept for historical comparison)
+| Value | Original (2014) |
+|---|---|
+| Start fall speed | 7 pts/frame (~8 u/s at ~53 pts/unit) |
+| Speed ramp | +0.25 per 5 s, uncapped |
+| Gap width | 240 → 140 pts |
+| Segment height | 100–130 pts |
+| Zig-zag step | 25–55 pts |
