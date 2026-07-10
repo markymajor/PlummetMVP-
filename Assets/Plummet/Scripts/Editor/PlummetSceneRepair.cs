@@ -15,6 +15,7 @@ namespace PlummetEditor
     {
         private const string GamePath = "Assets/Plummet/Sprites/Game/";
         private const string UiPath = "Assets/Plummet/Sprites/UI/";
+        private const string ScenePath = "Assets/Plummet/Scenes/PlummetMVP.unity";
 
         // Per the reference: dark NAVY walls, light teal-blue shaft, teal brick lining.
         private static readonly Color DarkWallColor = new Color(0.06f, 0.12f, 0.28f, 1f);
@@ -22,8 +23,52 @@ namespace PlummetEditor
         // White so the Brick-Color sprite's own teal bricks show as the lining trim.
         private static readonly Color LiningColor = new Color(1f, 1f, 1f, 1f);
 
-        [MenuItem("Plummet/Repair Open Scene")]
-        public static void RepairOpenScene()
+        [MenuItem("Plummet/Build Latest Playable", priority = 0)]
+        public static void BuildLatestPlayable()
+        {
+            if (!OpenPlummetScene())
+            {
+                return;
+            }
+
+            RepairLoadedScene();
+        }
+
+        [MenuItem("Plummet/Legacy/Repair Current Scene", priority = 100)]
+        public static void RepairCurrentScene()
+        {
+            if (EditorSceneManager.GetActiveScene().path != ScenePath)
+            {
+                Debug.LogError($"Plummet: refusing to repair '{EditorSceneManager.GetActiveScene().path}'. Open {ScenePath} or run Plummet/Build Latest Playable.");
+                return;
+            }
+
+            RepairLoadedScene();
+        }
+
+        private static bool OpenPlummetScene()
+        {
+            if (EditorSceneManager.GetActiveScene().path == ScenePath)
+            {
+                return true;
+            }
+
+            if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
+            {
+                return false;
+            }
+
+            if (!File.Exists(ScenePath))
+            {
+                Debug.LogError($"Plummet: missing source scene at {ScenePath}.");
+                return false;
+            }
+
+            EditorSceneManager.OpenScene(ScenePath);
+            return true;
+        }
+
+        private static void RepairLoadedScene()
         {
             if (EditorApplication.isPlaying)
             {
@@ -232,9 +277,9 @@ namespace PlummetEditor
             EditorUtility.SetDirty(gameManager);
             EditorUtility.SetDirty(pathManager);
             EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
-            EditorSceneManager.SaveOpenScenes();
+            EditorSceneManager.SaveScene(EditorSceneManager.GetActiveScene());
 
-            Debug.Log("Plummet scene repaired. Press Play to test the start screen.");
+            Debug.Log("Plummet latest playable rebuilt. Press Play to test the start screen.");
         }
 
         private static void ConfigureSprites()
@@ -1027,16 +1072,9 @@ namespace PlummetEditor
             shadow.effectColor = new Color(0.64f, 0.29f, 0.1f, 0.75f);
             shadow.effectDistance = new Vector2(5f, -5f);
         }
-
         private static Font GetDefaultFont()
         {
-            Font font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            if (font == null)
-            {
-                font = Resources.GetBuiltinResource<Font>("Arial.ttf");
-            }
-
-            return font;
+            return Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
         }
 
         private static Sprite LoadGameSprite(string fileName)
@@ -1368,7 +1406,7 @@ namespace PlummetEditor
 
             AssetDatabase.Refresh();
             ConfigureSprites();
-            Debug.Log($"Plummet: processed {count} skin image(s) into {outDir}. Now run Plummet/Repair Open Scene to wire them.");
+            Debug.Log($"Plummet: processed {count} skin image(s) into {outDir}. Now run Plummet/Build Latest Playable to wire them.");
         }
 
         private static Texture2D StripGreen(Texture2D src)

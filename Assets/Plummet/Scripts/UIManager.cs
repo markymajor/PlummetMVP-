@@ -5,6 +5,8 @@ namespace Plummet
 {
     public sealed class UIManager : MonoBehaviour
     {
+        private const string OpeningInstructionsSeenKey = "PlummetOpeningInstructionsSeen";
+
         [SerializeField] private GameObject startPanel;
         [SerializeField] private GameObject instructionDistancePanel;
         [SerializeField] private GameObject instructionSpeedPanel;
@@ -32,11 +34,13 @@ namespace Plummet
         [Tooltip("Tilt (degrees) of the rescued character, so it reads as bouncing off the net rather than pasted upright.")]
         [SerializeField] private float rescuedPlayerTilt = 35f;
 
-        private bool shouldShowOpeningInstructions = true;
+        private bool shouldShowOpeningInstructions;
         private bool showingOpeningInstructions;
 
         private void Awake()
         {
+            shouldShowOpeningInstructions = PlayerPrefs.GetInt(OpeningInstructionsSeenKey, 0) == 0;
+
             EnsurePanelsUsePortraitFrame();
             WireButton(playButton, OnPlayPressed);
             WireButton(distanceNextButton, OnDistanceNextPressed);
@@ -301,6 +305,7 @@ namespace Plummet
             if (showingOpeningInstructions)
             {
                 showingOpeningInstructions = false;
+                MarkOpeningInstructionsSeen();
                 ShowStart();
                 return;
             }
@@ -410,6 +415,12 @@ namespace Plummet
             rect.sizeDelta = Vector2.zero;
             rect.offsetMin = Vector2.zero;
             rect.offsetMax = Vector2.zero;
+        }
+
+        private static void MarkOpeningInstructionsSeen()
+        {
+            PlayerPrefs.SetInt(OpeningInstructionsSeenKey, 1);
+            PlayerPrefs.Save();
         }
     }
 }

@@ -9,7 +9,7 @@ namespace PlummetEditor
 {
     public static class PlummetInputSystemFixer
     {
-        [MenuItem("Plummet/Fix UI Input Module")]
+        [MenuItem("Plummet/Tools/Fix UI Input Module", priority = 200)]
         public static void FixUiInputModule()
         {
             EventSystem eventSystem = Object.FindFirstObjectByType<EventSystem>();
