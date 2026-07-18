@@ -167,6 +167,7 @@ namespace Plummet
 
             State = GameState.Dropping;
             ScrollSpeed = 0f;
+            SfxManager.Instance?.PlayDropWhoosh();
             player.gameObject.SetActive(true);
             player.BeginDrop();
             uiManager.HideStartChrome();
@@ -215,6 +216,7 @@ namespace Plummet
             }
 
             State = GameState.GameOver;
+            SfxManager.Instance?.PlayWallThud();
             // The RESCUED! screen shows the character bounced onto the firefighter's net
             // (a UI image in the selected skin); hide the world player so there's one
             // character on screen. Start/retry paths re-activate it.

@@ -203,6 +203,7 @@ namespace Plummet
             }
 
             ShowRescuedPlayer();
+            SfxManager.Instance?.PlayRescueBoing(0.12f);
         }
 
         // The bounced character on the net: the selected skin's falling frame, sized to
@@ -339,6 +340,11 @@ namespace Plummet
             Debug.Log("Share placeholder: wire native sharing later.");
         }
 
+        private static void PlayButtonTap()
+        {
+            SfxManager.Instance?.PlayButtonTap();
+        }
+
         private static void WireButton(Button button, UnityEngine.Events.UnityAction action)
         {
             if (button == null)
@@ -346,7 +352,9 @@ namespace Plummet
                 return;
             }
 
+            button.onClick.RemoveListener(PlayButtonTap);
             button.onClick.RemoveListener(action);
+            button.onClick.AddListener(PlayButtonTap);
             button.onClick.AddListener(action);
         }
 

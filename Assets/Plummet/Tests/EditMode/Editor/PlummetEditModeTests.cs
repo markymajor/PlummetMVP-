@@ -46,7 +46,26 @@ namespace PlummetEditor.Tests
             Assert.IsNotNull(Object.FindFirstObjectByType<ScoreManager>(), "Score Manager is missing.");
             Assert.IsNotNull(Object.FindFirstObjectByType<UIManager>(), "UI Manager is missing.");
             Assert.IsNotNull(Object.FindFirstObjectByType<SkinLibrary>(), "Skin Library is missing.");
+            Assert.IsNotNull(Object.FindFirstObjectByType<SfxManager>(), "SFX Manager is missing.");
         }
+
+        [Test]
+        public void PlummetSceneHasExactlyOneAudioListenerOnMainCamera()
+        {
+            EditorSceneManager.OpenScene(ScenePath);
+
+            Camera camera = Camera.main;
+            Assert.IsNotNull(camera, "Main Camera is missing.");
+
+            AudioListener[] listeners = Object.FindObjectsByType<AudioListener>(
+                FindObjectsInactive.Include,
+                FindObjectsSortMode.None);
+
+            Assert.AreEqual(1, listeners.Length, "The scene must contain exactly one Audio Listener.");
+            Assert.AreSame(camera.gameObject, listeners[0].gameObject, "The Audio Listener must be attached to Main Camera.");
+            Assert.IsTrue(listeners[0].enabled, "The Main Camera Audio Listener must be enabled.");
+        }
+
 
         [Test]
         public void GameManagerReferencesAreWired()
@@ -97,11 +116,56 @@ namespace PlummetEditor.Tests
             Assert.AreEqual(10, wallBrickCount, "Wall brick decals should increase from 8 to 10, the nearest whole-object +30% step without slot overlap.");
         }
 
+        [Test]
+        public void SfxManagerUsesVersionThreeClips()
+        {
+            EditorSceneManager.OpenScene(ScenePath);
+
+            SfxManager sfxManager = Object.FindFirstObjectByType<SfxManager>();
+            Assert.IsNotNull(sfxManager, "SFX Manager is missing.");
+
+            SerializedObject serialized = new SerializedObject(sfxManager);
+            AssertClip(serialized, "buttonTapClip", "button_tap_03");
+            AssertClip(serialized, "dropWhooshClip", "drop_whoosh_03");
+            AssertClip(serialized, "wallThudClip", "wall_thud_03");
+            AssertClip(serialized, "rescueBoingClip", "rescue_boing_03");
+        }
+
+        [Test]
+        public void SfxManagerUsesLoopingBackgroundMusic()
+        {
+            EditorSceneManager.OpenScene(ScenePath);
+
+            SfxManager sfxManager = Object.FindFirstObjectByType<SfxManager>();
+            Assert.IsNotNull(sfxManager, "SFX Manager is missing.");
+
+            SerializedObject serialized = new SerializedObject(sfxManager);
+            AssertClip(serialized, "musicLoopClip", "plummet_story_loop_112bpm");
+
+            SerializedProperty musicSourceProperty = serialized.FindProperty("musicSource");
+            Assert.IsNotNull(musicSourceProperty, "musicSource serialized field is missing.");
+
+            AudioSource musicSource = musicSourceProperty.objectReferenceValue as AudioSource;
+            Assert.IsNotNull(musicSource, "Music AudioSource is not wired.");
+            Assert.AreEqual("plummet_story_loop_112bpm", musicSource.clip.name, "Music AudioSource must use the story loop.");
+            Assert.IsTrue(musicSource.loop, "Background music must loop.");
+            Assert.IsFalse(musicSource.playOnAwake, "SfxManager starts music explicitly after configuring its mix.");
+        }
+
+
         private static void AssertReference(SerializedObject serialized, string propertyName)
         {
             SerializedProperty property = serialized.FindProperty(propertyName);
             Assert.IsNotNull(property, $"{propertyName} serialized field is missing.");
             Assert.IsNotNull(property.objectReferenceValue, $"{propertyName} is not wired.");
+        }
+
+        private static void AssertClip(SerializedObject serialized, string propertyName, string expectedName)
+        {
+            SerializedProperty property = serialized.FindProperty(propertyName);
+            Assert.IsNotNull(property, $"{propertyName} serialized field is missing.");
+            Assert.IsNotNull(property.objectReferenceValue, $"{propertyName} is not wired.");
+            Assert.AreEqual(expectedName, property.objectReferenceValue.name, $"{propertyName} must use version 3.");
         }
     }
 }

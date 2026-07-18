@@ -15,6 +15,7 @@ namespace PlummetEditor
     {
         private const string GamePath = "Assets/Plummet/Sprites/Game/";
         private const string UiPath = "Assets/Plummet/Sprites/UI/";
+        private const string AudioPath = "Assets/Plummet/Audio/";
         private const string ScenePath = "Assets/Plummet/Scenes/PlummetMVP.unity";
 
         // Per the reference: dark NAVY walls, light teal-blue shaft, teal brick lining.
@@ -234,6 +235,7 @@ namespace PlummetEditor
             }
 
             Set(scoreManager, "uiManager", uiManager);
+            SfxManager sfxManager = EnsureSfxManager();
 
             GameManager gameManager = Object.FindFirstObjectByType<GameManager>();
             if (gameManager == null)
@@ -274,6 +276,7 @@ namespace PlummetEditor
             EditorUtility.SetDirty(canvas);
             EditorUtility.SetDirty(uiManager);
             EditorUtility.SetDirty(scoreManager);
+            EditorUtility.SetDirty(sfxManager);
             EditorUtility.SetDirty(gameManager);
             EditorUtility.SetDirty(pathManager);
             EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
@@ -522,6 +525,7 @@ namespace PlummetEditor
             // while still showing shaft below for reaction.
             Vector3 camPos = camera.transform.position;
             camera.transform.position = new Vector3(camPos.x, 1.2f, camPos.z);
+            EnsureSingleAudioListener(camera);
             EnsureUrpBaseCamera(camera);
 
             PortraitViewportFitter fitter = camera.GetComponent<PortraitViewportFitter>();
@@ -532,6 +536,31 @@ namespace PlummetEditor
 
             EditorUtility.SetDirty(camera);
         }
+
+        private static void EnsureSingleAudioListener(Camera camera)
+        {
+            AudioListener[] listeners = Object.FindObjectsByType<AudioListener>(
+                FindObjectsInactive.Include,
+                FindObjectsSortMode.None);
+
+            foreach (AudioListener listener in listeners)
+            {
+                if (listener != null && listener.gameObject != camera.gameObject)
+                {
+                    Object.DestroyImmediate(listener);
+                }
+            }
+
+            AudioListener gameplayListener = camera.GetComponent<AudioListener>();
+            if (gameplayListener == null)
+            {
+                gameplayListener = camera.gameObject.AddComponent<AudioListener>();
+            }
+
+            gameplayListener.enabled = true;
+            EditorUtility.SetDirty(gameplayListener);
+        }
+
 
         // Ensure the camera carries URP camera data as a Base camera so the SolidColor clear
         // is honoured. Done via reflection so this editor script needs no hard URP reference.
@@ -1087,6 +1116,11 @@ namespace PlummetEditor
             return AssetDatabase.LoadAssetAtPath<Sprite>(UiPath + fileName);
         }
 
+        private static AudioClip LoadAudioClip(string fileName)
+        {
+            return AssetDatabase.LoadAssetAtPath<AudioClip>(AudioPath + fileName);
+        }
+
         private static RectSpec Stretch()
         {
             return new RectSpec(Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero, Vector2.zero);
@@ -1269,6 +1303,57 @@ namespace PlummetEditor
             }
 
             serializedObject.ApplyModifiedProperties();
+        }
+
+        private static SfxManager EnsureSfxManager()
+        {
+            SfxManager sfxManager = Object.FindFirstObjectByType<SfxManager>();
+            if (sfxManager == null)
+            {
+                sfxManager = new GameObject("SFX Manager").AddComponent<SfxManager>();
+            }
+
+            AudioSource[] sources = sfxManager.GetComponents<AudioSource>();
+            AudioSource effectSource = sources.Length > 0
+                ? sources[0]
+                : sfxManager.gameObject.AddComponent<AudioSource>();
+            AudioSource musicSource = sources.Length > 1
+                ? sources[1]
+                : sfxManager.gameObject.AddComponent<AudioSource>();
+
+            for (int i = sources.Length - 1; i >= 2; i--)
+            {
+                Object.DestroyImmediate(sources[i]);
+            }
+
+            effectSource.playOnAwake = false;
+            effectSource.loop = false;
+            effectSource.spatialBlend = 0f;
+
+            AudioClip musicLoop = LoadAudioClip("plummet_story_loop_112bpm.wav");
+            musicSource.playOnAwake = false;
+            musicSource.loop = true;
+            musicSource.spatialBlend = 0f;
+            musicSource.clip = musicLoop;
+            musicSource.volume = 0.35f;
+
+            Set(sfxManager, "buttonTapClip", LoadAudioClip("button_tap_03.wav"));
+            Set(sfxManager, "dropWhooshClip", LoadAudioClip("drop_whoosh_03.wav"));
+            Set(sfxManager, "wallThudClip", LoadAudioClip("wall_thud_03.wav"));
+            Set(sfxManager, "rescueBoingClip", LoadAudioClip("rescue_boing_03.wav"));
+            Set(sfxManager, "musicLoopClip", musicLoop);
+            Set(sfxManager, "musicSource", musicSource);
+            SetFloat(sfxManager, "masterVolume", 1f);
+            SetFloat(sfxManager, "buttonVolume", 0.65f);
+            SetFloat(sfxManager, "dropVolume", 0.8f);
+            SetFloat(sfxManager, "wallVolume", 0.9f);
+            SetFloat(sfxManager, "rescueVolume", 0.85f);
+            SetFloat(sfxManager, "musicVolume", 0.35f);
+
+            EditorUtility.SetDirty(effectSource);
+            EditorUtility.SetDirty(musicSource);
+            EditorUtility.SetDirty(sfxManager);
+            return sfxManager;
         }
 
         private static void EnsureEventSystem()
