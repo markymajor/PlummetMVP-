@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using NUnit.Framework;
 using Plummet;
 using UnityEditor;
@@ -60,6 +61,40 @@ namespace PlummetEditor.Tests
             AssertReference(serialized, "uiManager");
             AssertReference(serialized, "obstacleSpawner");
             AssertReference(serialized, "pathManager");
+        }
+
+        [Test]
+        public void WallBrickDecalsUseUniqueBandsPerSide()
+        {
+            EditorSceneManager.OpenScene(ScenePath);
+
+            WindowDecal[] decals = Object.FindObjectsByType<WindowDecal>(FindObjectsSortMode.None);
+            HashSet<string> occupiedWallBands = new HashSet<string>();
+            int wallBrickCount = 0;
+
+            foreach (WindowDecal decal in decals)
+            {
+                if (decal == null || !decal.name.StartsWith("Wall "))
+                {
+                    continue;
+                }
+
+                SerializedObject serialized = new SerializedObject(decal);
+                int side = serialized.FindProperty("wallSide").intValue;
+                int slot = serialized.FindProperty("slot").intValue;
+                int count = serialized.FindProperty("count").intValue;
+
+                Assert.AreEqual(9, count, $"{decal.name} should use the expanded 9-band wall lattice.");
+                Assert.AreNotEqual(0, side, $"{decal.name} must be pinned to one wall side.");
+                Assert.IsTrue(occupiedWallBands.Add(side + ":" + slot), $"{decal.name} overlaps another wall decal band on side {side}, slot {slot}.");
+
+                if (decal.name.StartsWith("Wall Brick Decal"))
+                {
+                    wallBrickCount++;
+                }
+            }
+
+            Assert.AreEqual(10, wallBrickCount, "Wall brick decals should increase from 8 to 10, the nearest whole-object +30% step without slot overlap.");
         }
 
         private static void AssertReference(SerializedObject serialized, string propertyName)

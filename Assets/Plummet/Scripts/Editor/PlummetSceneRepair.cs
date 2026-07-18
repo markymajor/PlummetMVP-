@@ -795,13 +795,12 @@ namespace PlummetEditor
             Color wallBrickTint = new Color(0.16f, 0.36f, 0.44f, 1f);
 
             // ONE shared lattice PER WALL SIDE for all wall decor (same pattern as the
-            // shaft-centre lattice): each wall's lit windows + brick clusters come from a
-            // single 4-band set (windows every 2nd band, bricks in the rest), so no two
-            // wall decals can ever share a band. Spacing is size-aware: every wall decal
-            // knows the tallest decal in its lattice and derives its jitter margin from
-            // (ownHeight + tallest)/2 + clearance, so the bigger windows automatically
-            // get more room instead of overlapping the bricks.
-            const int wallBandsPerSide = 7;
+            // shaft-centre lattice): each wall's lit windows, brick clusters, and graffiti
+            // each own unique bands, so no wall decoration can share a vertical lane. We
+            // use 9 bands per side and 5 brick slots per side: 8 -> 10 wall brick decals,
+            // the nearest whole-object increase to the requested +30% while preserving
+            // enough band height for the size-aware no-overlap spacing below.
+            const int wallBandsPerSide = 9;
             const float wallWindowMaxScale = 0.8f;
             const float wallBrickMaxScale = 0.85f;
             float windowHeight = litWindow != null ? litWindow.rect.height / litWindow.pixelsPerUnit * wallWindowMaxScale : 1.6f;
@@ -840,9 +839,10 @@ namespace PlummetEditor
                         wallSide: side, maxNeighbourHeight: wallTallest, showChance: 0.4f);
                 }
 
-                // Bricks fill the bands the side's window/graffiti don't own (disjoint
-                // per-side allocation: L = W{0,3} B{1,2,4,5}; R = W{5} B{1,2,3,4}; G{6}).
-                foreach (int slot in side < 0 ? new[] { 1, 2, 4, 5 } : new[] { 1, 2, 3, 4 })
+                // Bricks fill bands the side's window/graffiti don't own. The slot sets stay
+                // disjoint from windows (L: 0/3, R: 5) and graffiti (8), so the extra
+                // brick decals cannot overlap with other wall decals.
+                foreach (int slot in side < 0 ? new[] { 1, 2, 4, 5, 7 } : new[] { 1, 2, 3, 4, 7 })
                 {
                     Sprite cluster = LoadGameSprite($"Briks_{2 + (slot + (side < 0 ? 0 : 2)) % 5:00}-mask.png");
                     // Depth-aware: WindowDecal re-places these fully inside the wall band
@@ -852,14 +852,14 @@ namespace PlummetEditor
                         containInWall: true, wallSide: side, maxNeighbourHeight: wallTallest);
                 }
 
-                // Rare graffiti tag in the lattice's last band: Evie tags the left wall,
+                // Rare graffiti tag in the lattice's last band (8): Evie tags the left wall,
                 // Harrison the right. Shows on ~1 in 3 cycles, tilted a little each time,
                 // depth-aware like the bricks, never mirrored (it's readable text).
                 Sprite tagSprite = side < 0 ? evieTag : harrisonTag;
                 if (tagSprite != null)
                 {
                     float nativeW = tagSprite.rect.width / tagSprite.pixelsPerUnit;
-                    CreateWindowDecal($"Wall Graffiti {sideTag}", tagSprite, graffitiTint, 3, true, 6, wallBandsPerSide,
+                    CreateWindowDecal($"Wall Graffiti {sideTag}", tagSprite, graffitiTint, 3, true, 8, wallBandsPerSide,
                         graffitiMinWidth / nativeW, graffitiMaxWidth / nativeW, 0f, 2.6f, 3.7f,
                         // 0.5 roll x ~2/3 depth eligibility = ~1 in 3 cycles actually shown.
                         containInWall: true, wallSide: side, maxNeighbourHeight: wallTallest,
