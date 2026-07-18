@@ -41,10 +41,10 @@ namespace Plummet
         [Header("Brick lining")]
         [Tooltip("Width (world units) of the brick column running down the inner wall edge.")]
         [SerializeField] private float liningWidth = 0.42f;
-        [Tooltip("World height of one brick down the lining.")]
-        [SerializeField] private float liningTile = 0.42f;
+        [Tooltip("World height of one brick down the lining. Bricks tile per segment, so (liningTile + liningGap) must divide the 1.05 segment height evenly or the remainder shows up as extra mortar at every segment boundary.")]
+        [SerializeField] private float liningTile = 0.46f;
         [Tooltip("Mortar gap (world units) left between stacked lining bricks so they read as individual bricks, not a continuous strip.")]
-        [SerializeField] private float liningGap = 0.14f;
+        [SerializeField] private float liningGap = 0.065f;
         [Tooltip("Max distance a lining brick may jut past the wall edge into the shaft, like the OG art. Staggered per brick. COSMETIC ONLY: the lethal collider stays on the smooth wall edge, so brushing a jutting brick tip is forgiven.")]
         [SerializeField] private float liningJutMax = 0.25f;
         [SerializeField] private Color liningColor = new Color(0.16f, 0.41f, 0.43f, 1f);

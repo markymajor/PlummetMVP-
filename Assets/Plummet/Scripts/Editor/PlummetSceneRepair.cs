@@ -460,7 +460,12 @@ namespace PlummetEditor
             SetFloat(pathManager, "edgeNoiseScale", 0.7f);
             SetInt(pathManager, "edgeSubdivisions", 10);
             SetFloat(pathManager, "liningWidth", 0.42f);
-            SetFloat(pathManager, "liningTile", 0.55f);
+            // Tight stacked brick column like the OG: 2 bricks per 1.05u segment,
+            // 2 x (0.46 + 0.065) = 1.05 exactly, so the mortar gap is uniform across
+            // segment boundaries. (At the old 0.55 tile only ONE brick fit per segment
+            // and the leftover ~0.5u segment height, not liningGap, set the spacing.)
+            SetFloat(pathManager, "liningTile", 0.46f);
+            SetFloat(pathManager, "liningGap", 0.065f);
             // Staggered brick overhang past the wall edge (cosmetic; collider stays smooth).
             // 0.25 tuned live against the OG reference (0.1 was invisible, 0.22 still shy).
             SetFloat(pathManager, "liningJutMax", 0.25f);
