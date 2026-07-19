@@ -610,9 +610,11 @@ namespace Plummet
                     float jut = BrickJut(noiseStart + y0, seed, style.LiningJutMax);
                     ix0 -= side * jut;
                     ix1 -= side * jut;
-                    // Brick runs from its (jutted) face INTO the wall.
-                    float bx0 = ix0 + side * (liningWidth + jut);
-                    float bx1 = ix1 + side * (liningWidth + jut);
+                    // The jut translates the WHOLE brick (back face shifts with the inner
+                    // face), so every brick keeps a constant liningWidth and just steps
+                    // in/out of the wall like the OG - not stretched wider.
+                    float bx0 = ix0 + side * liningWidth;
+                    float bx1 = ix1 + side * liningWidth;
 
                     int vb = k * 4;
                     verts[vb + 0] = new Vector3(ix0, y0, 0f);
